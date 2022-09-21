@@ -25,9 +25,9 @@ class MainWindow(QMainWindow):
         self.model = Model()
 
         self.model.current_image_changed.connect(self.update_image_label)
-        self.model.current_rectangle_changed.connect(self.current_rectangle_changed)
         self.model.current_rectangle_changed.connect(self.update_image_label)
-        #self.model.rectangles_changed.connect(self.rectangles_changed)
+        self.model.rectangles_changed.connect(self.rectangles_changed)
+        self.model.rectangles_changed.connect(self.update_image_label)
 
         # menu actions
         self.ui.actionOpen_Folder.triggered.connect(self.open_folder)
@@ -136,7 +136,18 @@ class MainWindow(QMainWindow):
         painter.end()
 
         # draw rectangles
-
+        try:
+            image_file = self.model.current_image["filename"]
+            rectangles = self.model.rectangles[image_file]
+        except KeyError:
+            pass
+        else:
+            painter = QPainter(pixmap)
+            painter.setBrush(Qt.red)
+            for rectangle in rectangles:
+                for corner in rectangle:
+                    painter.drawEllipse(QPointF(*corner), 5, 5)
+            painter.end()
 
         self.ui.imageLabel.setPixmap(pixmap.scaled(w, h, Qt.KeepAspectRatio))
         self.ui.imageLabel.mousePressEvent = self.getImagePos
@@ -157,16 +168,6 @@ class MainWindow(QMainWindow):
         y_orig = height_scale * y_scaled
         print(x_scaled, y_scaled, x_orig, y_orig)
         self.add_point_to_current_rectangle(x_orig, y_orig)
-
-        # # TODO: load from json and draw based on model data
-        # pixmap = self.ui.imageLabel.pixmap().copy()
-        # #pixmap = self.model.current_image["pixmap"].copy()
-        # painter = QPainter(pixmap)
-        # painter.setBrush(Qt.red)
-        # painter.drawEllipse(event.position(), 5, 5)
-        # painter.end()
-        # #self.ui.imageLabel.setPixmap(pixmap)
-        # self.model.current_image["pixmap"] = pixmap
 
 
     def add_point_to_current_rectangle(self, x, y):
@@ -195,51 +196,13 @@ class MainWindow(QMainWindow):
         print("self.model.current_rectangle: ", self.model.current_rectangle)
         print("self.model.rectangles: ", self.model.rectangles)
 
-
-    def draw_rectangles(self):
-        if not self.model.current_image:
-            return
-
-        #file_name = self.current_image["filename"]
-        #for rectangle in self.model.rectangles[file_name]:
-
-        pixmap = self.ui.imageLabel.pixmap().copy()
-        #pixmap = self.model.current_image["pixmap"].copy()
-        painter = QPainter(pixmap)
-        painter.setBrush(Qt.red)
-
-        image_file = self.model.current_image["filename"]
-        for rectangle in self.model.rectangles[image_file]:
-            for corner in rectangle:
-                painter.drawEllipse(QPointF(*corner), 5, 5)
-
-        painter.end()
-        self.ui.imageLabel.setPixmap(pixmap)
-        #self.model.current_image["pixmap"] = pixmap
-
-
-    @Slot()
-    def current_rectangle_changed(self):
-        if not self.model.current_image:
-            return
-        print("current rectangle changed")
-        # pixmap = self.model.current_image["pixmap"].copy()
-        # painter = QPainter(pixmap)
-        # painter.setBrush(Qt.red)
-        # for corner in self.model.current_rectangle:
-        #     painter.drawEllipse(QPointF(*corner), 5, 5)
-        # painter.end()
-        # self.update_image_label({"pixmap": pixmap})
-
     
     @Slot()
     def rectangles_changed(self):
         print("rectangles changed")
-        # TODO: comment back in later...
-        #with open(os.path.join(self.image_dir, "meta.json"), "w") as file:
-        #    json.dump(self.model.rectangles, file)
+        with open(os.path.join(self.image_dir, "meta.json"), "w") as file:
+            json.dump(self.model.rectangles, file)
         #self.populate_rectangle_list()
-        self.draw_rectangles()
 
 
     # TODO: finish this function, highlight selected rectangle
@@ -250,16 +213,6 @@ class MainWindow(QMainWindow):
     #        self.ui.rectanglesListWidget.addItem(file_name)
     #    except KeyError:
     #        pass
-            
-
-    #def draw_current_rectangle(self):
-    #    if len(self.model.current_rectangle) == 4:
-    #        # draw corners + rectangle
-    #        pass
-    #    else:
-    #        # draw corners
-    #        for corner in self.model.current_rectangle:
-    #            print(corner)
             
 
     @Slot()
