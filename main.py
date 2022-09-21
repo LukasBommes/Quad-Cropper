@@ -24,9 +24,10 @@ class MainWindow(QMainWindow):
         self.ui.imageLabel.setGeometry(0, 0, 640, 512)  # initial size
         self.model = Model()
 
-        self.model.current_image_changed.connect(lambda image: self.update_image_label(image))
+        self.model.current_image_changed.connect(self.update_image_label)
         self.model.current_rectangle_changed.connect(self.current_rectangle_changed)
-        self.model.rectangles_changed.connect(self.rectangles_changed)
+        self.model.current_rectangle_changed.connect(self.update_image_label)
+        #self.model.rectangles_changed.connect(self.rectangles_changed)
 
         # menu actions
         self.ui.actionOpen_Folder.triggered.connect(self.open_folder)
@@ -36,7 +37,6 @@ class MainWindow(QMainWindow):
         # buttons
         self.ui.newRectangleButton.clicked.connect(self.new_rectangle_button_clicked)
         self.ui.deleteRectangleButton.clicked.connect(self.delete_rectangle_button_clicked)
-
 
         # image selection changed
         self.ui.imagesListWidget.currentItemChanged.connect(self.image_selection_changed)
@@ -48,7 +48,7 @@ class MainWindow(QMainWindow):
 
 
     def resizeEvent(self, event):
-        self.update_image_label(self.model.current_image)
+        self.update_image_label()
 
 
     def open_folder(self):
@@ -121,12 +121,25 @@ class MainWindow(QMainWindow):
 
 
     @Slot()
-    def update_image_label(self, image):
-        if image: #self.model.current_image:
-            w = self.ui.imageLabel.width()
-            h = self.ui.imageLabel.height()
-            self.ui.imageLabel.setPixmap(image["pixmap"].scaled(w, h, Qt.KeepAspectRatio))
-            self.ui.imageLabel.mousePressEvent = self.getImagePos
+    def update_image_label(self):
+        if not self.model.current_image:
+            return
+        w = self.ui.imageLabel.width()
+        h = self.ui.imageLabel.height()
+        pixmap = self.model.current_image["pixmap"].copy()
+
+        # draw current rectangle
+        painter = QPainter(pixmap)
+        painter.setBrush(Qt.red)
+        for corner in self.model.current_rectangle:
+            painter.drawEllipse(QPointF(*corner), 5, 5)
+        painter.end()
+
+        # draw rectangles
+
+
+        self.ui.imageLabel.setPixmap(pixmap.scaled(w, h, Qt.KeepAspectRatio))
+        self.ui.imageLabel.mousePressEvent = self.getImagePos
 
     
     def getImagePos(self, event):
@@ -209,16 +222,14 @@ class MainWindow(QMainWindow):
     def current_rectangle_changed(self):
         if not self.model.current_image:
             return
-
         print("current rectangle changed")
-        pixmap = self.ui.imageLabel.pixmap().copy()
-        #pixmap = self.model.current_image["pixmap"].copy()
-        painter = QPainter(pixmap)
-        painter.setBrush(Qt.red)
-        for corner in self.model.current_rectangle:
-            painter.drawEllipse(QPointF(*corner), 5, 5)
-        painter.end()
-        self.ui.imageLabel.setPixmap(pixmap)
+        # pixmap = self.model.current_image["pixmap"].copy()
+        # painter = QPainter(pixmap)
+        # painter.setBrush(Qt.red)
+        # for corner in self.model.current_rectangle:
+        #     painter.drawEllipse(QPointF(*corner), 5, 5)
+        # painter.end()
+        # self.update_image_label({"pixmap": pixmap})
 
     
     @Slot()
@@ -271,7 +282,7 @@ class MainWindow(QMainWindow):
 class Model(QObject):
     rectangles_changed = Signal()
     current_rectangle_changed = Signal(object)
-    current_image_changed = Signal(object)
+    current_image_changed = Signal()
 
     def __init__(self):
         super().__init__()
@@ -304,7 +315,7 @@ class Model(QObject):
     @current_image.setter
     def current_image(self, value):
         self._current_image = value
-        self.current_image_changed.emit(value)
+        self.current_image_changed.emit()
 
 
 
