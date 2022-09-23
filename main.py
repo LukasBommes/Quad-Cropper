@@ -37,9 +37,11 @@ class MainWindow(QMainWindow):
 
         self.model.current_image_changed.connect(self.update_image_label)
         self.model.current_rectangle_changed.connect(self.update_image_label)
-        self.model.rectangles_changed.connect(self.rectangles_changed)
-        self.model.rectangles_changed.connect(self.update_image_label)
+        self.model.rectangles_changed.connect(self.save_rectangles)
+        self.model.rectangles_changed.connect(self.update_image_label)        
         self.model.image_files_changed.connect(self.update_image_list)
+        self.model.current_image_changed.connect(self.update_rectangle_list)
+        self.model.rectangles_changed.connect(self.update_rectangle_list)
 
         # menu actions
         self.ui.actionOpen_Folder.triggered.connect(self.open_folder)
@@ -128,6 +130,7 @@ class MainWindow(QMainWindow):
         self.model.image_files = image_files
 
     
+    @Slot()
     def update_image_list(self, image_files):
         self.ui.imagesListWidget.clear()
         for image_file in image_files:
@@ -238,24 +241,27 @@ class MainWindow(QMainWindow):
 
     
     @Slot()
-    def rectangles_changed(self):
+    def save_rectangles(self):
         if not self.model.image_dir:
             return
+        # save to disk
         with open(os.path.join(self.model.image_dir, "meta.json"), "w") as file:
             json.dump(self.model.rectangles, file)
-        #self.populate_rectangle_list()
 
 
-    # TODO: finish this function, highlight selected rectangle
-    def populate_rectangle_list(self):
+    @Slot()
+    def update_rectangle_list(self):
+        self.ui.rectanglesListWidget.clear()
         if not self.model.current_image:
             return
-        file_name = self.model.current_image["filename"]
         try:
-            rectangle = self.model.rectangles[file_name]
-            self.ui.rectanglesListWidget.addItem(file_name)
-        except KeyError:
+            file_name = self.model.current_image["filename"]
+        except KeyError: # no annotations yet
             pass
+        else:
+            rectangles = self.model.rectangles[file_name]
+            for rectangle_id in rectangles.keys():
+                self.ui.rectanglesListWidget.addItem(rectangle_id)
 
 
     @Slot()
@@ -304,6 +310,7 @@ class Model(QObject):
     def image_files(self, value):
         self._image_files = value
         self.image_files_changed.emit(value)
+        print("image_files_changed emitted")
 
     @property
     def rectangles(self):
@@ -313,6 +320,7 @@ class Model(QObject):
     def rectangles(self, value):
         self._rectangles = value
         self.rectangles_changed.emit(value)
+        print("rectangles_changed emitted")
 
     @property
     def current_rectangle(self):
@@ -322,6 +330,7 @@ class Model(QObject):
     def current_rectangle(self, value):
         self._current_rectangle = value
         self.current_rectangle_changed.emit(value)
+        print("current_rectangle_changed emitted")
 
     @property
     def current_image(self):
@@ -331,6 +340,7 @@ class Model(QObject):
     def current_image(self, value):
         self._current_image = value
         self.current_image_changed.emit(value)
+        print("current_image_changed emitted")
 
 
 if __name__ == "__main__":
