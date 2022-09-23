@@ -30,12 +30,14 @@ class MainWindow(QMainWindow):
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
         self.ui.imageLabel.setGeometry(0, 0, 640, 512)  # initial size
+        self.disable()
         self.model = Model()
 
         self.model.current_image_changed.connect(self.update_image_label)
         self.model.current_rectangle_changed.connect(self.update_image_label)
         self.model.rectangles_changed.connect(self.rectangles_changed)
         self.model.rectangles_changed.connect(self.update_image_label)
+        self.model.image_files_changed.connect(self.update_image_list)
 
         # menu actions
         self.ui.actionOpen_Folder.triggered.connect(self.open_folder)
@@ -43,16 +45,22 @@ class MainWindow(QMainWindow):
         self.ui.actionCrop_All.triggered.connect(self.crop_all)
         
         # buttons
-        self.ui.newRectangleButton.clicked.connect(self.new_rectangle_button_clicked)
         self.ui.deleteRectangleButton.clicked.connect(self.delete_rectangle_button_clicked)
 
         # image selection changed
         self.ui.imagesListWidget.currentItemChanged.connect(self.image_selection_changed)
 
 
-    def reset(self):
-        self.model.current_rectangle = []
-        self.model.current_image = None
+    def enable(self):
+        self.ui.actionOpen_Folder.setEnabled(False)
+        self.ui.actionClose_Folder.setEnabled(True)
+        self.ui.actionCrop_All.setEnabled(True)
+
+    
+    def disable(self):
+        self.ui.actionOpen_Folder.setEnabled(True)
+        self.ui.actionClose_Folder.setEnabled(False)
+        self.ui.actionCrop_All.setEnabled(False)
 
 
     def resizeEvent(self, event):
@@ -65,26 +73,27 @@ class MainWindow(QMainWindow):
             self, caption="Open Dataset", options=QFileDialog.ShowDirsOnly)
         if dir == "":
             return
-        self.image_dir = dir
+        self.model.image_dir = dir
         # check if meta.json is available and load into model
         try:
             with open(os.path.join(dir, "meta.json"), "r") as file:
                 self.model.rectangles = json.load(file)
         except FileNotFoundError:
             pass
-        self.load_image_files()
-        self.populate_image_list()      
+        self.get_image_files()
+        self.enable()
+        print("Dataset opened")
 
 
     @Slot()
     def close_folder(self):
-        print("Closing open folder")
-        # TODO: reset everything into intial state
+        self.model.reset()
+        self.disable()
+        print("Dataset closed")
 
 
     @Slot()
     def crop_all(self):
-        print("Cropping annotated rectangles for all images in opened folder")
         if not self.model.current_image:
             return
         # select output directory
@@ -106,35 +115,35 @@ class MainWindow(QMainWindow):
             image = self.model.current_image["image"]
             image_cropped, _ = crop_module(image, rectangle, crop_width=None, crop_aspect=None, rotate_mode=None)
             cv2.imwrite(os.path.join(output_dir, "{}_{}".format(image_file, rectangle_id)), image_cropped)
+        print("Cropped annotated rectangles for all images in opened folder")
 
 
-    def load_image_files(self):
-        self.image_files = []
+    def get_image_files(self):
+        image_files = []
         for file_type in ["jpg", "JPG", "png", "PNG", "tiff", "TIFF"]:
-            files = sorted(glob.glob(os.path.join(self.image_dir, "*.{}".format(file_type))))
-            self.image_files.extend(files)
-        print(self.image_files)
+            files = sorted(glob.glob(os.path.join(self.model.image_dir, "*.{}".format(file_type))))
+            image_files.extend(files)
+        self.model.image_files = image_files
 
     
-    def populate_image_list(self):
-        for image_file in self.image_files:
+    def update_image_list(self, image_files):
+        self.ui.imagesListWidget.clear()
+        for image_file in image_files:
             file_name = os.path.basename(image_file)
             self.ui.imagesListWidget.addItem(file_name)
 
 
     @Slot()
     def image_selection_changed(self):
-        self.reset()
+        self.model.current_rectangle = []
+        self.model.current_image = None
+        # get name of selected image
         current = self.ui.imagesListWidget.currentItem()
         if not current:
             return
         selected_image_file = current.text()
-        print("Image selection changed")
-        self.load_selected_image(selected_image_file)
-
-
-    def load_selected_image(self, selected_image_file):
-        image_file = os.path.join(self.image_dir, selected_image_file)
+        # load selected image
+        image_file = os.path.join(self.model.image_dir, selected_image_file)
         image = cv2.imread(image_file)
         height, width, _ = image.shape[:3]
         image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -149,10 +158,14 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def update_image_label(self):
-        if not self.model.current_image:
-            return
         w = self.ui.imageLabel.width()
         h = self.ui.imageLabel.height()
+
+        if not self.model.current_image:
+            pixmap = QPixmap("src/no_image.png")
+            self.ui.imageLabel.setPixmap(pixmap.scaled(w, h, Qt.KeepAspectRatio))
+            return
+        
         pixmap = self.model.current_image["pixmap"].copy()
 
         # draw current rectangle
@@ -230,8 +243,9 @@ class MainWindow(QMainWindow):
     
     @Slot()
     def rectangles_changed(self):
-        print("rectangles changed")
-        with open(os.path.join(self.image_dir, "meta.json"), "w") as file:
+        if not self.model.image_dir:
+            return
+        with open(os.path.join(self.model.image_dir, "meta.json"), "w") as file:
             json.dump(self.model.rectangles, file)
         #self.populate_rectangle_list()
 
@@ -246,14 +260,6 @@ class MainWindow(QMainWindow):
             self.ui.rectanglesListWidget.addItem(file_name)
         except KeyError:
             pass
-            
-
-    @Slot()
-    def new_rectangle_button_clicked(self):
-        if not self.model.current_image:
-            return
-        # now click four corner points (TODO. show helper text in status bar...)
-        self.model.current_rectangle = []
 
 
     @Slot()
@@ -266,15 +272,43 @@ class MainWindow(QMainWindow):
 
 
 class Model(QObject):
-    rectangles_changed = Signal()
+    rectangles_changed = Signal(object)
     current_rectangle_changed = Signal(object)
-    current_image_changed = Signal()
+    current_image_changed = Signal(object)
+    image_files_changed = Signal(list)
 
     def __init__(self):
         super().__init__()
+        self._image_dir = None
+        self._image_files = []
         self._rectangles = {}
         self._current_rectangle = []
         self._current_image = None
+
+    def reset(self):
+        self.image_dir = None
+        self.image_files = []
+        self.rectangles = {}
+        self.current_rectangle = []
+        self.current_image = None
+
+
+    @property
+    def image_dir(self):
+        return self._image_dir
+
+    @image_dir.setter
+    def image_dir(self, value):
+        self._image_dir = value
+
+    @property
+    def image_files(self):
+        return self._image_files
+
+    @image_files.setter
+    def image_files(self, value):
+        self._image_files = value
+        self.image_files_changed.emit(value)
 
     @property
     def rectangles(self):
@@ -283,7 +317,7 @@ class Model(QObject):
     @rectangles.setter
     def rectangles(self, value):
         self._rectangles = value
-        self.rectangles_changed.emit()
+        self.rectangles_changed.emit(value)
 
     @property
     def current_rectangle(self):
@@ -301,14 +335,15 @@ class Model(QObject):
     @current_image.setter
     def current_image(self, value):
         self._current_image = value
-        self.current_image_changed.emit()
-
+        self.current_image_changed.emit(value)
 
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
 
     window = MainWindow()
+    screen = window.screen()
+    window.resize(screen.availableSize() * 0.5)
     window.show()
 
     sys.exit(app.exec())

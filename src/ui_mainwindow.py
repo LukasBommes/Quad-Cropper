@@ -18,14 +18,14 @@ from PySide6.QtGui import (QAction, QBrush, QColor, QConicalGradient,
     QTransform)
 from PySide6.QtWidgets import (QApplication, QGridLayout, QHBoxLayout, QLabel,
     QListWidget, QListWidgetItem, QMainWindow, QMenu,
-    QMenuBar, QPushButton, QSizePolicy, QStatusBar,
-    QVBoxLayout, QWidget)
+    QMenuBar, QPushButton, QSizePolicy, QSpacerItem,
+    QStatusBar, QVBoxLayout, QWidget)
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(821, 585)
+        MainWindow.resize(682, 436)
         self.actionOpen_Folder = QAction(MainWindow)
         self.actionOpen_Folder.setObjectName(u"actionOpen_Folder")
         self.actionCrop_All = QAction(MainWindow)
@@ -81,15 +81,14 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_2 = QHBoxLayout()
         self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
-        self.newRectangleButton = QPushButton(self.centralwidget)
-        self.newRectangleButton.setObjectName(u"newRectangleButton")
-
-        self.horizontalLayout_2.addWidget(self.newRectangleButton)
-
         self.deleteRectangleButton = QPushButton(self.centralwidget)
         self.deleteRectangleButton.setObjectName(u"deleteRectangleButton")
 
         self.horizontalLayout_2.addWidget(self.deleteRectangleButton)
+
+        self.horizontalSpacer = QSpacerItem(100, 20, QSizePolicy.Fixed, QSizePolicy.Minimum)
+
+        self.horizontalLayout_2.addItem(self.horizontalSpacer)
 
 
         self.verticalLayout.addLayout(self.horizontalLayout_2)
@@ -100,7 +99,7 @@ class Ui_MainWindow(object):
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(MainWindow)
         self.menubar.setObjectName(u"menubar")
-        self.menubar.setGeometry(QRect(0, 0, 821, 22))
+        self.menubar.setGeometry(QRect(0, 0, 682, 22))
         self.menuFile = QMenu(self.menubar)
         self.menuFile.setObjectName(u"menuFile")
         self.menuCrop = QMenu(self.menubar)
@@ -129,7 +128,6 @@ class Ui_MainWindow(object):
         self.imageLabel.setText(QCoreApplication.translate("MainWindow", u"TextLabel", None))
         self.label_2.setText(QCoreApplication.translate("MainWindow", u"Images", None))
         self.label_3.setText(QCoreApplication.translate("MainWindow", u"Rectangles", None))
-        self.newRectangleButton.setText(QCoreApplication.translate("MainWindow", u"New Rectangle", None))
         self.deleteRectangleButton.setText(QCoreApplication.translate("MainWindow", u"Delete Rectangle", None))
         self.menuFile.setTitle(QCoreApplication.translate("MainWindow", u"File", None))
         self.menuCrop.setTitle(QCoreApplication.translate("MainWindow", u"Actions", None))
