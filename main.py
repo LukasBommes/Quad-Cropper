@@ -42,6 +42,7 @@ class MainWindow(QMainWindow):
         self.model.image_files_changed.connect(self.update_image_list)
         self.model.current_image_changed.connect(self.update_rectangle_list)
         self.model.rectangles_changed.connect(self.update_rectangle_list)
+        self.model.selected_rectangle_changed.connect(self.selected_rectangle_changed)
 
         # menu actions
         self.ui.actionOpen_Folder.triggered.connect(self.open_folder)
@@ -139,6 +140,7 @@ class MainWindow(QMainWindow):
     def image_selection_changed(self):
         self.model.current_rectangle = []
         self.model.current_image = None
+        self.model.selected_rectangle = None
         # get name of selected image
         current = self.ui.imagesListWidget.currentItem()
         if not current:
@@ -164,7 +166,6 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def update_image_label(self):
-        print(type(self.model.rectangles))
         w = self.ui.imageLabel.width()
         h = self.ui.imageLabel.height()
 
@@ -218,13 +219,13 @@ class MainWindow(QMainWindow):
         x_orig = width_scale * x_scaled
         y_orig = height_scale * y_scaled
         print(x_scaled, y_scaled, x_orig, y_orig)
-        self.add_point_to_current_rectangle(x_orig, y_orig)
+        #self.add_point_to_current_rectangle(x_orig, y_orig)
 
 
     def add_point_to_current_rectangle(self, x, y):
         current_rectangle_copy = self.model.current_rectangle.copy()
         current_rectangle_copy.append((x, y))
-        print("self.model.current_rectangle: ", current_rectangle_copy)
+        #print("self.model.current_rectangle: ", current_rectangle_copy)
         self.model.current_rectangle = current_rectangle_copy
         if len(current_rectangle_copy) < 4:
             return
@@ -238,8 +239,8 @@ class MainWindow(QMainWindow):
         rectangles_copy[image_file][new_id] = self.model.current_rectangle
         self.model.rectangles = rectangles_copy
         self.model.current_rectangle = []
-        print("self.model.current_rectangle: ", self.model.current_rectangle)
-        print("self.model.rectangles: ", self.model.rectangles)
+        #print("self.model.current_rectangle: ", self.model.current_rectangle)
+        #print("self.model.rectangles: ", self.model.rectangles)
 
     
     @Slot()
@@ -274,6 +275,10 @@ class MainWindow(QMainWindow):
         if not current:
             return
         self.model.selected_rectangle = current.text()
+
+
+    @Slot()
+    def selected_rectangle_changed(self):
         if self.model.selected_rectangle:
             self.ui.deleteRectangleButton.setEnabled(True)
         else:
@@ -286,7 +291,7 @@ class MainWindow(QMainWindow):
             return
         if not self.model.selected_rectangle:
             return
-        print("Deleting {}".format(self.model.selected_rectangle))
+        #print("Deleting {}".format(self.model.selected_rectangle))
         # delete from rectangles
         try:
             image_file = self.model.current_image["filename"]
@@ -296,8 +301,6 @@ class MainWindow(QMainWindow):
         else:
             del rectangles_copy[image_file][self.model.selected_rectangle]
             self.model.rectangles = rectangles_copy
-
-        # redraw (should trigger automatically)
 
 
 
@@ -341,7 +344,7 @@ class Model(QObject):
     def image_files(self, value):
         self._image_files = value
         self.image_files_changed.emit(value)
-        print("image_files_changed emitted")
+        #print("image_files_changed emitted")
 
     @property
     def rectangles(self):
@@ -351,7 +354,7 @@ class Model(QObject):
     def rectangles(self, value):
         self._rectangles = value
         self.rectangles_changed.emit(value)
-        print("rectangles_changed emitted")
+        #print("rectangles_changed emitted")
 
     @property
     def current_rectangle(self):
@@ -361,7 +364,7 @@ class Model(QObject):
     def current_rectangle(self, value):
         self._current_rectangle = value
         self.current_rectangle_changed.emit(value)
-        print("current_rectangle_changed emitted")
+        #print("current_rectangle_changed emitted")
 
     @property
     def current_image(self):
@@ -371,9 +374,7 @@ class Model(QObject):
     def current_image(self, value):
         self._current_image = value
         self.current_image_changed.emit(value)
-        print("current_image_changed emitted")
-
-
+        #print("current_image_changed emitted")
 
     @property
     def selected_rectangle(self):
@@ -383,7 +384,7 @@ class Model(QObject):
     def selected_rectangle(self, value):
         self._selected_rectangle = value
         self.selected_rectangle_changed.emit(value)
-        print("selected_rectangle_changed emitted")
+        #print("selected_rectangle_changed emitted")
 
 
 if __name__ == "__main__":
