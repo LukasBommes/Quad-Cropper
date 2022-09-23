@@ -2,12 +2,16 @@ import sys
 import os
 import glob
 import json
+
+import numpy as np
 import cv2
 
 from PySide6.QtWidgets import QApplication, QMainWindow, QFileDialog
 from PySide6.QtCore import Qt, QObject, Slot, Signal, QPointF
-from PySide6.QtGui import QPixmap, QImage, QPainter
+from PySide6.QtGui import QPixmap, QImage, QPainter, QColor, QPolygonF
 from src.ui_mainwindow import Ui_MainWindow
+
+from src.utils import sort_cw, crop_module
 
 
 #TODO:
@@ -55,6 +59,7 @@ class MainWindow(QMainWindow):
         self.update_image_label()
 
 
+    @Slot()
     def open_folder(self):
         dir = QFileDialog.getExistingDirectory(
             self, caption="Open Dataset", options=QFileDialog.ShowDirsOnly)
@@ -71,14 +76,36 @@ class MainWindow(QMainWindow):
         self.populate_image_list()      
 
 
+    @Slot()
     def close_folder(self):
         print("Closing open folder")
         # TODO: reset everything into intial state
 
 
+    @Slot()
     def crop_all(self):
         print("Cropping annotated rectangles for all images in opened folder")
-        pass
+        if not self.model.current_image:
+            return
+        # select output directory
+        output_dir = QFileDialog.getExistingDirectory(
+            self, caption="Select Output Directory", options=QFileDialog.ShowDirsOnly)
+        if output_dir == "":
+            return
+
+        # crop and rectify annotated regions from current image
+        try:
+            image_file = self.model.current_image["filename"]
+            rectangles = self.model.rectangles[image_file]
+        except KeyError:
+            return
+
+        for rectangle_id, rectangle in enumerate(rectangles):
+            rectangle = sort_cw(np.array(rectangle))
+            rectangle = rectangle.reshape(4, 1, 2)
+            image = self.model.current_image["image"]
+            image_cropped, _ = crop_module(image, rectangle, crop_width=None, crop_aspect=None, rotate_mode=None)
+            cv2.imwrite(os.path.join(output_dir, "{}_{}".format(image_file, rectangle_id)), image_cropped)
 
 
     def load_image_files(self):
@@ -110,12 +137,13 @@ class MainWindow(QMainWindow):
         image_file = os.path.join(self.image_dir, selected_image_file)
         image = cv2.imread(image_file)
         height, width, _ = image.shape[:3]
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         bytesPerLine = 3 * width
-        qt_image = QImage(image.data, width, height, bytesPerLine, QImage.Format_RGB888)
+        qt_image = QImage(image_rgb.data, width, height, bytesPerLine, QImage.Format_RGB888)
         self.model.current_image = {
             "filename": selected_image_file,
-            "pixmap": QPixmap(qt_image)
+            "pixmap": QPixmap(qt_image),
+            "image": image,
         }
 
 
@@ -142,11 +170,15 @@ class MainWindow(QMainWindow):
             pass
         else:
             painter = QPainter(pixmap)
-            painter.setBrush(Qt.red)
             for rectangle in rectangles:
-                for corner in rectangle:
+                polygon = QPolygonF()
+                painter.setBrush(QColor(0, 255, 0, 255))
+                for corner in sort_cw(np.array(rectangle)):
                     painter.drawEllipse(QPointF(*corner), 5, 5)
-            painter.end()
+                    polygon.append(QPointF(*corner))
+                painter.setBrush(QColor(0, 255, 0, 100))
+                painter.drawConvexPolygon(polygon)
+            painter.end()            
 
         self.ui.imageLabel.setPixmap(pixmap.scaled(w, h, Qt.KeepAspectRatio))
         self.ui.imageLabel.mousePressEvent = self.getImagePos
@@ -201,17 +233,19 @@ class MainWindow(QMainWindow):
         print("rectangles changed")
         with open(os.path.join(self.image_dir, "meta.json"), "w") as file:
             json.dump(self.model.rectangles, file)
-        self.populate_rectangle_list()
+        #self.populate_rectangle_list()
 
 
     # TODO: finish this function, highlight selected rectangle
     def populate_rectangle_list(self):
-       file_name = self.current_image["filename"]
-       try:
-           rectangle = self.model.rectangles[file_name]
-           self.ui.rectanglesListWidget.addItem(file_name)
-       except KeyError:
-           pass
+        if not self.model.current_image:
+            return
+        file_name = self.model.current_image["filename"]
+        try:
+            rectangle = self.model.rectangles[file_name]
+            self.ui.rectanglesListWidget.addItem(file_name)
+        except KeyError:
+            pass
             
 
     @Slot()
