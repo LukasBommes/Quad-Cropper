@@ -2,6 +2,8 @@ import sys
 import os
 import glob
 import json
+import uuid
+from collections import defaultdict
 
 import numpy as np
 import cv2
@@ -109,7 +111,7 @@ class MainWindow(QMainWindow):
         except KeyError:
             return
 
-        for rectangle_id, rectangle in enumerate(rectangles):
+        for rectangle_id, rectangle in rectangles.items():
             rectangle = sort_cw(np.array(rectangle))
             rectangle = rectangle.reshape(4, 1, 2)
             image = self.model.current_image["image"]
@@ -183,7 +185,7 @@ class MainWindow(QMainWindow):
             pass
         else:
             painter = QPainter(pixmap)
-            for rectangle in rectangles:
+            for rectangle_id, rectangle in rectangles.items():
                 polygon = QPolygonF()
                 painter.setBrush(QColor(0, 255, 0, 255))
                 for corner in sort_cw(np.array(rectangle)):
@@ -205,7 +207,7 @@ class MainWindow(QMainWindow):
         height_orig = self.model.current_image["pixmap"].size().height()
         width_scale = width_orig / width_scaled
         height_scale = height_orig / height_scaled
-
+        # get scaled position
         x_scaled = event.position().x()
         y_scaled = event.position().y()
         x_orig = width_scale * x_scaled
@@ -227,14 +229,8 @@ class MainWindow(QMainWindow):
     def create_new_rectangle(self):
         image_file = self.model.current_image["filename"]
         rectangles_copy = self.model.rectangles.copy()
-        try:
-            rectangles_copy[image_file].append(
-                self.model.current_rectangle
-            )
-        except KeyError:
-            rectangles_copy[image_file] = [
-                self.model.current_rectangle
-            ]
+        new_id = str(uuid.uuid4())
+        rectangles_copy[image_file][new_id] = self.model.current_rectangle
         self.model.rectangles = rectangles_copy
         self.model.current_rectangle = []
         print("self.model.current_rectangle: ", self.model.current_rectangle)
@@ -281,17 +277,16 @@ class Model(QObject):
         super().__init__()
         self._image_dir = None
         self._image_files = []
-        self._rectangles = {}
+        self._rectangles = defaultdict(dict)
         self._current_rectangle = []
         self._current_image = None
 
     def reset(self):
         self.image_dir = None
         self.image_files = []
-        self.rectangles = {}
+        self.rectangles = defaultdict(dict)
         self.current_rectangle = []
         self.current_image = None
-
 
     @property
     def image_dir(self):
