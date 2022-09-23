@@ -15,6 +15,10 @@ from src.ui_mainwindow import Ui_MainWindow
 # click four corner points, on each click draw a point
 # once we have four points, draw a rectangle, add rectangale to list of rectangles for this image
 
+# feature: keyboard shortcuts ("N" for new rectangle, "esc" to aboard drawing rectangle, ...)
+
+# feature: delete all existing annotations...
+
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -104,14 +108,9 @@ class MainWindow(QMainWindow):
 
     def load_selected_image(self, selected_image_file):
         image_file = os.path.join(self.image_dir, selected_image_file)
-        
-        # TODO: check in model.rectangles if rectangles exist for this image...
-        #self.update_image_label()
-
         image = cv2.imread(image_file)
         height, width, _ = image.shape[:3]
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-
         bytesPerLine = 3 * width
         qt_image = QImage(image.data, width, height, bytesPerLine, QImage.Format_RGB888)
         self.model.current_image = {
@@ -202,17 +201,17 @@ class MainWindow(QMainWindow):
         print("rectangles changed")
         with open(os.path.join(self.image_dir, "meta.json"), "w") as file:
             json.dump(self.model.rectangles, file)
-        #self.populate_rectangle_list()
+        self.populate_rectangle_list()
 
 
     # TODO: finish this function, highlight selected rectangle
-    #def populate_rectangle_list(self):
-    #    file_name = self.current_image["filename"]
-    #    try:
-    #        rectangle = self.model.rectangles[file_name]
-    #        self.ui.rectanglesListWidget.addItem(file_name)
-    #    except KeyError:
-    #        pass
+    def populate_rectangle_list(self):
+       file_name = self.current_image["filename"]
+       try:
+           rectangle = self.model.rectangles[file_name]
+           self.ui.rectanglesListWidget.addItem(file_name)
+       except KeyError:
+           pass
             
 
     @Slot()
