@@ -53,18 +53,21 @@ class MainWindow(QMainWindow):
 
         # image selection changed
         self.ui.imagesListWidget.currentItemChanged.connect(self.image_selection_changed)
+        self.ui.rectanglesListWidget.currentItemChanged.connect(self.rectangle_selection_changed)
 
 
     def enable(self):
         self.ui.actionOpen_Folder.setEnabled(False)
         self.ui.actionClose_Folder.setEnabled(True)
         self.ui.actionCrop_All.setEnabled(True)
+        self.ui.deleteRectangleButton.setEnabled(False)
 
     
     def disable(self):
         self.ui.actionOpen_Folder.setEnabled(True)
         self.ui.actionClose_Folder.setEnabled(False)
         self.ui.actionCrop_All.setEnabled(False)
+        self.ui.deleteRectangleButton.setEnabled(False)
 
 
     def resizeEvent(self, event):
@@ -81,7 +84,7 @@ class MainWindow(QMainWindow):
         # check if meta.json is available and load into model
         try:
             with open(os.path.join(dir, "meta.json"), "r") as file:
-                self.model.rectangles = json.load(file)
+                self.model.rectangles = defaultdict(dict, json.load(file))
         except FileNotFoundError:
             pass
         self.get_image_files()
@@ -98,27 +101,21 @@ class MainWindow(QMainWindow):
 
     @Slot()
     def crop_all(self):
-        if not self.model.current_image:
-            return
         # select output directory
         output_dir = QFileDialog.getExistingDirectory(
             self, caption="Select Output Directory", options=QFileDialog.ShowDirsOnly)
         if output_dir == "":
             return
-
         # crop and rectify annotated regions from current image
-        try:
-            image_file = self.model.current_image["filename"]
-            rectangles = self.model.rectangles[image_file]
-        except KeyError:
-            return
-
-        for rectangle_id, rectangle in rectangles.items():
-            rectangle = sort_cw(np.array(rectangle))
-            rectangle = rectangle.reshape(4, 1, 2)
-            image = self.model.current_image["image"]
-            image_cropped, _ = crop_module(image, rectangle, crop_width=None, crop_aspect=None, rotate_mode=None)
-            cv2.imwrite(os.path.join(output_dir, "{}_{}".format(image_file, rectangle_id)), image_cropped)
+        for image_name, rectangles in self.model.rectangles.items():
+            image_file = os.path.join(self.model.image_dir, image_name)
+            image = self.load_image(image_file)
+            image_file_name, image_file_ext = os.path.splitext(os.path.basename(image_file))
+            for rectangle_id, rectangle in rectangles.items():
+                rectangle = sort_cw(np.array(rectangle))
+                rectangle = rectangle.reshape(4, 1, 2)
+                image_cropped, _ = crop_module(image, rectangle, crop_width=None, crop_aspect=None, rotate_mode=None)
+                cv2.imwrite(os.path.join(output_dir, "{}_{}{}".format(image_file_name, rectangle_id, image_file_ext)), image_cropped)
         print("Cropped annotated rectangles for all images in opened folder")
 
 
@@ -149,7 +146,7 @@ class MainWindow(QMainWindow):
         selected_image_file = current.text()
         # load selected image
         image_file = os.path.join(self.model.image_dir, selected_image_file)
-        image = cv2.imread(image_file)
+        image = self.load_image(image_file)
         height, width, _ = image.shape[:3]
         image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         bytesPerLine = 3 * width
@@ -161,8 +158,13 @@ class MainWindow(QMainWindow):
         }
 
 
+    def load_image(self, image_file):
+        return cv2.imread(image_file)
+
+
     @Slot()
     def update_image_label(self):
+        print(type(self.model.rectangles))
         w = self.ui.imageLabel.width()
         h = self.ui.imageLabel.height()
 
@@ -232,7 +234,7 @@ class MainWindow(QMainWindow):
     def create_new_rectangle(self):
         image_file = self.model.current_image["filename"]
         rectangles_copy = self.model.rectangles.copy()
-        new_id = str(uuid.uuid4())
+        new_id = str(uuid.uuid4())[:8]
         rectangles_copy[image_file][new_id] = self.model.current_rectangle
         self.model.rectangles = rectangles_copy
         self.model.current_rectangle = []
@@ -256,20 +258,46 @@ class MainWindow(QMainWindow):
             return
         try:
             file_name = self.model.current_image["filename"]
+            rectangles = self.model.rectangles[file_name]
         except KeyError: # no annotations yet
             pass
-        else:
-            rectangles = self.model.rectangles[file_name]
+        else:            
             for rectangle_id in rectangles.keys():
                 self.ui.rectanglesListWidget.addItem(rectangle_id)
 
 
     @Slot()
+    def rectangle_selection_changed(self):
+        # get selected rectangle from list
+        self.model.selected_rectangle = None
+        current = self.ui.rectanglesListWidget.currentItem()
+        if not current:
+            return
+        self.model.selected_rectangle = current.text()
+        if self.model.selected_rectangle:
+            self.ui.deleteRectangleButton.setEnabled(True)
+        else:
+            self.ui.deleteRectangleButton.setEnabled(False)
+
+
+    @Slot()
     def delete_rectangle_button_clicked(self):
-        # TODO: get selected rectangle from list
-        # delete rectangle from mode.rectangles
-        # redraw
-        pass
+        if not self.model.current_image:
+            return
+        if not self.model.selected_rectangle:
+            return
+        print("Deleting {}".format(self.model.selected_rectangle))
+        # delete from rectangles
+        try:
+            image_file = self.model.current_image["filename"]
+            rectangles_copy = self.model.rectangles.copy()
+        except KeyError:
+            pass
+        else:
+            del rectangles_copy[image_file][self.model.selected_rectangle]
+            self.model.rectangles = rectangles_copy
+
+        # redraw (should trigger automatically)
 
 
 
@@ -278,6 +306,7 @@ class Model(QObject):
     current_rectangle_changed = Signal(object)
     current_image_changed = Signal(object)
     image_files_changed = Signal(list)
+    selected_rectangle_changed = Signal(str)
 
     def __init__(self):
         super().__init__()
@@ -286,6 +315,7 @@ class Model(QObject):
         self._rectangles = defaultdict(dict)
         self._current_rectangle = []
         self._current_image = None
+        self._selected_rectangle = None
 
     def reset(self):
         self.image_dir = None
@@ -293,6 +323,7 @@ class Model(QObject):
         self.rectangles = defaultdict(dict)
         self.current_rectangle = []
         self.current_image = None
+        self.selected_rectangle = None
 
     @property
     def image_dir(self):
@@ -341,6 +372,18 @@ class Model(QObject):
         self._current_image = value
         self.current_image_changed.emit(value)
         print("current_image_changed emitted")
+
+
+
+    @property
+    def selected_rectangle(self):
+        return self._selected_rectangle
+
+    @selected_rectangle.setter
+    def selected_rectangle(self, value):
+        self._selected_rectangle = value
+        self.selected_rectangle_changed.emit(value)
+        print("selected_rectangle_changed emitted")
 
 
 if __name__ == "__main__":
