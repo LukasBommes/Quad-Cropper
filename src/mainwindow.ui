@@ -106,7 +106,7 @@
      <string>Actions</string>
     </property>
     <addaction name="actionCrop_All"/>
-    <addaction name="actionClear_all_annotations"/>
+    <addaction name="actionClear_all_quadrilaterals"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -139,9 +139,9 @@
     <string>About</string>
    </property>
   </action>
-  <action name="actionClear_all_annotations">
+  <action name="actionClear_all_quadrilaterals">
    <property name="text">
-    <string>Clear All Annotations</string>
+    <string>Clear All Quadrilaterals</string>
    </property>
   </action>
  </widget>
