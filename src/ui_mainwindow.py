@@ -32,6 +32,8 @@ class Ui_MainWindow(object):
         self.actionCrop_All.setObjectName(u"actionCrop_All")
         self.actionClose_Folder = QAction(MainWindow)
         self.actionClose_Folder.setObjectName(u"actionClose_Folder")
+        self.actionAbout = QAction(MainWindow)
+        self.actionAbout.setObjectName(u"actionAbout")
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
         self.gridLayout = QGridLayout(self.centralwidget)
@@ -91,6 +93,8 @@ class Ui_MainWindow(object):
         self.menuFile.setObjectName(u"menuFile")
         self.menuCrop = QMenu(self.menubar)
         self.menuCrop.setObjectName(u"menuCrop")
+        self.menuHelp = QMenu(self.menubar)
+        self.menuHelp.setObjectName(u"menuHelp")
         MainWindow.setMenuBar(self.menubar)
         self.statusbar = QStatusBar(MainWindow)
         self.statusbar.setObjectName(u"statusbar")
@@ -98,9 +102,11 @@ class Ui_MainWindow(object):
 
         self.menubar.addAction(self.menuFile.menuAction())
         self.menubar.addAction(self.menuCrop.menuAction())
+        self.menubar.addAction(self.menuHelp.menuAction())
         self.menuFile.addAction(self.actionOpen_Folder)
         self.menuFile.addAction(self.actionClose_Folder)
         self.menuCrop.addAction(self.actionCrop_All)
+        self.menuHelp.addAction(self.actionAbout)
 
         self.retranslateUi(MainWindow)
 
@@ -112,10 +118,12 @@ class Ui_MainWindow(object):
         self.actionOpen_Folder.setText(QCoreApplication.translate("MainWindow", u"Open Folder...", None))
         self.actionCrop_All.setText(QCoreApplication.translate("MainWindow", u"Crop All", None))
         self.actionClose_Folder.setText(QCoreApplication.translate("MainWindow", u"Close Folder", None))
+        self.actionAbout.setText(QCoreApplication.translate("MainWindow", u"About", None))
         self.label_2.setText(QCoreApplication.translate("MainWindow", u"Images", None))
         self.label_3.setText(QCoreApplication.translate("MainWindow", u"Rectangles", None))
         self.deleteRectangleButton.setText(QCoreApplication.translate("MainWindow", u"Delete Rectangle", None))
         self.menuFile.setTitle(QCoreApplication.translate("MainWindow", u"File", None))
         self.menuCrop.setTitle(QCoreApplication.translate("MainWindow", u"Actions", None))
+        self.menuHelp.setTitle(QCoreApplication.translate("MainWindow", u"Help", None))
     # retranslateUi
 

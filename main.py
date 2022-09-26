@@ -9,42 +9,43 @@ import numpy as np
 import cv2
 
 from PySide6 import QtCore, QtGui, QtWidgets
-from PySide6.QtWidgets import QApplication, QMainWindow, QFileDialog
-from PySide6.QtCore import Qt, QObject, Slot, Signal, QPointF
+from PySide6.QtWidgets import QApplication, QMainWindow, QFileDialog, QMessageBox, \
+    QGraphicsView, QGraphicsScene, QGraphicsPixmapItem, QFrame
+from PySide6.QtCore import Qt, QObject, Slot, Signal, QPoint, QPointF, QRectF
 from PySide6.QtGui import QPixmap, QImage, QPainter, QColor, QPolygonF
 from src.ui_mainwindow import Ui_MainWindow
 
 from src.utils import sort_cw, crop_module
 
 
-class PhotoViewer(QtWidgets.QGraphicsView):
-    photoClicked = QtCore.Signal(QtCore.QPoint)
+class PhotoViewer(QGraphicsView):
+    photoClicked = Signal(QPoint)
 
     def __init__(self, parent):
         super(PhotoViewer, self).__init__(parent)
         self._zoom = 0
         self._empty = True
-        self._scene = QtWidgets.QGraphicsScene(self)
-        self._photo = QtWidgets.QGraphicsPixmapItem()
+        self._scene = QGraphicsScene(self)
+        self._photo = QGraphicsPixmapItem()
         self._scene.addItem(self._photo)
         self.setScene(self._scene)
-        self.setDragMode(QtWidgets.QGraphicsView.NoDrag)
-        self.setTransformationAnchor(QtWidgets.QGraphicsView.AnchorUnderMouse)
-        self.setResizeAnchor(QtWidgets.QGraphicsView.AnchorUnderMouse)
-        self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.setDragMode(QGraphicsView.NoDrag)
+        self.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
+        self.setResizeAnchor(QGraphicsView.AnchorUnderMouse)
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setBackgroundBrush(QtGui.QBrush(QtGui.QColor(30, 30, 30)))
-        self.setFrameShape(QtWidgets.QFrame.NoFrame)
+        self.setFrameShape(QFrame.NoFrame)
 
     def hasPhoto(self):
         return not self._empty
 
     def fitInView(self, scale=True):
-        rect = QtCore.QRectF(self._photo.pixmap().rect())
+        rect = QRectF(self._photo.pixmap().rect())
         if not rect.isNull():
             self.setSceneRect(rect)
             if self.hasPhoto():
-                unity = self.transform().mapRect(QtCore.QRectF(0, 0, 1, 1))
+                unity = self.transform().mapRect(QRectF(0, 0, 1, 1))
                 self.scale(1 / unity.width(), 1 / unity.height())
                 viewrect = self.viewport().rect()
                 scenerect = self.transform().mapRect(rect)
@@ -61,7 +62,7 @@ class PhotoViewer(QtWidgets.QGraphicsView):
             self._photo.setPixmap(pixmap)
         else:
             self._empty = True
-            self._photo.setPixmap(QtGui.QPixmap())
+            self._photo.setPixmap(QPixmap())
         if fit_in_view:
             self.fitInView()
 
@@ -92,6 +93,7 @@ class MainWindow(QMainWindow):
         super(MainWindow, self).__init__()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
+        self.setWindowTitle("QuadCropper")
         self.disable()
         self.model = Model()
 
@@ -108,11 +110,13 @@ class MainWindow(QMainWindow):
         self.model.current_image_changed.connect(self.update_rectangle_list)
         self.model.rectangles_changed.connect(self.update_rectangle_list)
         self.model.selected_rectangle_changed.connect(self.selected_rectangle_changed)
+        self.model.selected_rectangle_changed.connect(lambda _: self.update_image_label(fit_in_view=False))
 
         # menu actions
         self.ui.actionOpen_Folder.triggered.connect(self.open_folder)
         self.ui.actionClose_Folder.triggered.connect(self.close_folder)
         self.ui.actionCrop_All.triggered.connect(self.crop_all)
+        self.ui.actionAbout.triggered.connect(self.about)
         
         # buttons
         self.ui.deleteRectangleButton.clicked.connect(self.delete_rectangle_button_clicked)
@@ -138,6 +142,25 @@ class MainWindow(QMainWindow):
 
     def resizeEvent(self, event):
         self.update_image_label(fit_in_view=False)
+
+
+    def keyPressEvent(self, event):
+        if event.key() == QtCore.Qt.Key_Escape:
+            self.model.current_rectangle = []
+        event.accept()
+
+
+    def about(self):
+        gh = "LukasBommes/Quad-Cropper"
+        about_text = "QuadCropper<br><br>" \
+            + "Author: Lukas Bommes<br>" \
+            + "Organization: Helmholtz Institute Erlangen-Nürnberg for Renewable Energy (HI ERN)<br>" \
+            + "GitHub: <a href='https://github.com/{gh}'>{gh}</a><br>".format(gh=gh)
+        QMessageBox.about(
+            self,
+            "About QuadCropper",
+            about_text
+        )
 
 
     @Slot()
@@ -253,11 +276,17 @@ class MainWindow(QMainWindow):
             painter = QPainter(pixmap)
             for rectangle_id, rectangle in rectangles.items():
                 polygon = QPolygonF()
-                painter.setBrush(QColor(0, 255, 0, 255))
+                if self.model.selected_rectangle and rectangle_id == self.model.selected_rectangle:
+                    painter.setBrush(QColor(255, 128, 0, 255))
+                else:
+                    painter.setBrush(QColor(0, 255, 0, 255))
                 for corner in sort_cw(np.array(rectangle)):
                     painter.drawEllipse(QPointF(*corner), 5, 5)
                     polygon.append(QPointF(*corner))
-                painter.setBrush(QColor(0, 255, 0, 100))
+                if self.model.selected_rectangle and rectangle_id == self.model.selected_rectangle:
+                    painter.setBrush(QColor(255, 128, 0, 100))
+                else:
+                    painter.setBrush(QColor(0, 255, 0, 100))
                 painter.drawConvexPolygon(polygon)
             painter.end()            
 
