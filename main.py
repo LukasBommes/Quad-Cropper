@@ -17,16 +17,6 @@ from src.ui_mainwindow import Ui_MainWindow
 from src.utils import sort_cw, crop_module
 
 
-#TODO:
-# click "new rectangle"
-# click four corner points, on each click draw a point
-# once we have four points, draw a rectangle, add rectangale to list of rectangles for this image
-
-# feature: keyboard shortcuts ("N" for new rectangle, "esc" to aboard drawing rectangle, ...)
-
-# feature: delete all existing annotations...
-
-
 class PhotoViewer(QtWidgets.QGraphicsView):
     photoClicked = QtCore.Signal(QtCore.QPoint)
 
@@ -38,6 +28,7 @@ class PhotoViewer(QtWidgets.QGraphicsView):
         self._photo = QtWidgets.QGraphicsPixmapItem()
         self._scene.addItem(self._photo)
         self.setScene(self._scene)
+        self.setDragMode(QtWidgets.QGraphicsView.NoDrag)
         self.setTransformationAnchor(QtWidgets.QGraphicsView.AnchorUnderMouse)
         self.setResizeAnchor(QtWidgets.QGraphicsView.AnchorUnderMouse)
         self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
@@ -63,14 +54,13 @@ class PhotoViewer(QtWidgets.QGraphicsView):
             self._zoom = 0
 
     def setPhoto(self, pixmap=None, fit_in_view=True):
-        self._zoom = 0
+        if fit_in_view:
+            self._zoom = 0
         if pixmap and not pixmap.isNull():
             self._empty = False
-            self.setDragMode(QtWidgets.QGraphicsView.ScrollHandDrag)
             self._photo.setPixmap(pixmap)
         else:
             self._empty = True
-            self.setDragMode(QtWidgets.QGraphicsView.NoDrag)
             self._photo.setPixmap(QtGui.QPixmap())
         if fit_in_view:
             self.fitInView()
@@ -89,12 +79,6 @@ class PhotoViewer(QtWidgets.QGraphicsView):
                 self.fitInView()
             else:
                 self._zoom = 0
-
-    def toggleDragMode(self):
-        if self.dragMode() == QtWidgets.QGraphicsView.ScrollHandDrag:
-            self.setDragMode(QtWidgets.QGraphicsView.NoDrag)
-        elif not self._photo.pixmap().isNull():
-            self.setDragMode(QtWidgets.QGraphicsView.ScrollHandDrag)
 
     def mousePressEvent(self, event):
         if self._photo.isUnderMouse():
@@ -281,27 +265,7 @@ class MainWindow(QMainWindow):
 
 
     def photoClicked(self, pos):
-        print("photo clicked ", pos)
-        if self.viewer.dragMode()  == QtWidgets.QGraphicsView.NoDrag:
-            self.editPixInfo.setText('%d, %d' % (pos.x(), pos.y()))
         self.add_point_to_current_rectangle(pos.x(), pos.y())
-
-    
-    # def getImagePos(self, event):
-    #     # get current image scale
-    #     width_scaled = self.ui.imageLabel.pixmap().size().width() #self.ui.imageLabel.width()
-    #     height_scaled = self.ui.imageLabel.pixmap().size().height() #self.ui.imageLabel.height()
-    #     width_orig = self.model.current_image["pixmap"].size().width()
-    #     height_orig = self.model.current_image["pixmap"].size().height()
-    #     width_scale = width_orig / width_scaled
-    #     height_scale = height_orig / height_scaled
-    #     # get scaled position
-    #     x_scaled = event.position().x()
-    #     y_scaled = event.position().y()
-    #     x_orig = width_scale * x_scaled
-    #     y_orig = height_scale * y_scaled
-    #     #print(x_scaled, y_scaled, x_orig, y_orig)
-    #     self.add_point_to_current_rectangle(x_orig, y_orig)
 
 
     def add_point_to_current_rectangle(self, x, y):
