@@ -2,4 +2,4 @@ TODOs:
 
 - function to clear all rectangles
 - add ID to each rectangle
-- setup.py and dpeloyment
+- write readme (usage instructions)

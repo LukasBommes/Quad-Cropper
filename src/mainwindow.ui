@@ -40,12 +40,12 @@
       <item>
        <widget class="QLabel" name="label_3">
         <property name="text">
-         <string>Rectangles</string>
+         <string>Quadrilaterals</string>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QListWidget" name="rectanglesListWidget">
+       <widget class="QListWidget" name="quadsListWidget">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Fixed" vsizetype="Expanding">
           <horstretch>0</horstretch>
@@ -57,9 +57,9 @@
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_2">
         <item>
-         <widget class="QPushButton" name="deleteRectangleButton">
+         <widget class="QPushButton" name="deleteQuadButton">
           <property name="text">
-           <string>Delete Rectangle</string>
+           <string>Delete Quadrilateral</string>
           </property>
          </widget>
         </item>
@@ -106,6 +106,7 @@
      <string>Actions</string>
     </property>
     <addaction name="actionCrop_All"/>
+    <addaction name="actionClear_all_annotations"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -136,6 +137,11 @@
   <action name="actionAbout">
    <property name="text">
     <string>About</string>
+   </property>
+  </action>
+  <action name="actionClear_all_annotations">
+   <property name="text">
+    <string>Clear All Annotations</string>
    </property>
   </action>
  </widget>

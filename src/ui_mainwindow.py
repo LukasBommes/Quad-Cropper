@@ -34,6 +34,8 @@ class Ui_MainWindow(object):
         self.actionClose_Folder.setObjectName(u"actionClose_Folder")
         self.actionAbout = QAction(MainWindow)
         self.actionAbout.setObjectName(u"actionAbout")
+        self.actionClear_all_annotations = QAction(MainWindow)
+        self.actionClear_all_annotations.setObjectName(u"actionClear_all_annotations")
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
         self.gridLayout = QGridLayout(self.centralwidget)
@@ -61,19 +63,19 @@ class Ui_MainWindow(object):
 
         self.verticalLayout.addWidget(self.label_3)
 
-        self.rectanglesListWidget = QListWidget(self.centralwidget)
-        self.rectanglesListWidget.setObjectName(u"rectanglesListWidget")
-        sizePolicy.setHeightForWidth(self.rectanglesListWidget.sizePolicy().hasHeightForWidth())
-        self.rectanglesListWidget.setSizePolicy(sizePolicy)
+        self.quadsListWidget = QListWidget(self.centralwidget)
+        self.quadsListWidget.setObjectName(u"quadsListWidget")
+        sizePolicy.setHeightForWidth(self.quadsListWidget.sizePolicy().hasHeightForWidth())
+        self.quadsListWidget.setSizePolicy(sizePolicy)
 
-        self.verticalLayout.addWidget(self.rectanglesListWidget)
+        self.verticalLayout.addWidget(self.quadsListWidget)
 
         self.horizontalLayout_2 = QHBoxLayout()
         self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
-        self.deleteRectangleButton = QPushButton(self.centralwidget)
-        self.deleteRectangleButton.setObjectName(u"deleteRectangleButton")
+        self.deleteQuadButton = QPushButton(self.centralwidget)
+        self.deleteQuadButton.setObjectName(u"deleteQuadButton")
 
-        self.horizontalLayout_2.addWidget(self.deleteRectangleButton)
+        self.horizontalLayout_2.addWidget(self.deleteQuadButton)
 
         self.horizontalSpacer = QSpacerItem(100, 20, QSizePolicy.Fixed, QSizePolicy.Minimum)
 
@@ -106,6 +108,7 @@ class Ui_MainWindow(object):
         self.menuFile.addAction(self.actionOpen_Folder)
         self.menuFile.addAction(self.actionClose_Folder)
         self.menuCrop.addAction(self.actionCrop_All)
+        self.menuCrop.addAction(self.actionClear_all_annotations)
         self.menuHelp.addAction(self.actionAbout)
 
         self.retranslateUi(MainWindow)
@@ -119,9 +122,10 @@ class Ui_MainWindow(object):
         self.actionCrop_All.setText(QCoreApplication.translate("MainWindow", u"Crop All", None))
         self.actionClose_Folder.setText(QCoreApplication.translate("MainWindow", u"Close Folder", None))
         self.actionAbout.setText(QCoreApplication.translate("MainWindow", u"About", None))
+        self.actionClear_all_annotations.setText(QCoreApplication.translate("MainWindow", u"Clear All Annotations", None))
         self.label_2.setText(QCoreApplication.translate("MainWindow", u"Images", None))
-        self.label_3.setText(QCoreApplication.translate("MainWindow", u"Rectangles", None))
-        self.deleteRectangleButton.setText(QCoreApplication.translate("MainWindow", u"Delete Rectangle", None))
+        self.label_3.setText(QCoreApplication.translate("MainWindow", u"Quadrilaterals", None))
+        self.deleteQuadButton.setText(QCoreApplication.translate("MainWindow", u"Delete Quadrilateral", None))
         self.menuFile.setTitle(QCoreApplication.translate("MainWindow", u"File", None))
         self.menuCrop.setTitle(QCoreApplication.translate("MainWindow", u"Actions", None))
         self.menuHelp.setTitle(QCoreApplication.translate("MainWindow", u"Help", None))

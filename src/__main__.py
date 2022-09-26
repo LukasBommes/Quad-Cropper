@@ -9,11 +9,10 @@ def main():
     import numpy as np
     import cv2
 
-    from PySide6 import QtCore, QtGui, QtWidgets
     from PySide6.QtWidgets import QApplication, QMainWindow, QFileDialog, QMessageBox, \
         QGraphicsView, QGraphicsScene, QGraphicsPixmapItem, QFrame
     from PySide6.QtCore import Qt, QObject, Slot, Signal, QPoint, QPointF, QRectF
-    from PySide6.QtGui import QPixmap, QImage, QPainter, QColor, QPolygonF
+    from PySide6.QtGui import QPixmap, QImage, QPainter, QBrush, QColor, QPolygonF
     from src.ui_mainwindow import Ui_MainWindow
 
     from src.utils import sort_cw, crop_module
@@ -35,7 +34,7 @@ def main():
             self.setResizeAnchor(QGraphicsView.AnchorUnderMouse)
             self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
             self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-            self.setBackgroundBrush(QtGui.QBrush(QtGui.QColor(30, 30, 30)))
+            self.setBackgroundBrush(QBrush(QColor(30, 30, 30)))
             self.setFrameShape(QFrame.NoFrame)
 
         def hasPhoto(self):
@@ -104,14 +103,14 @@ def main():
             self.ui.gridLayout.addWidget(self.viewer, 0, 1, 1, 1)
 
             self.model.current_image_changed.connect(lambda _: self.update_image_label(fit_in_view=True))
-            self.model.current_rectangle_changed.connect(lambda _: self.update_image_label(fit_in_view=False))
-            self.model.rectangles_changed.connect(self.save_rectangles)
-            self.model.rectangles_changed.connect(lambda _: self.update_image_label(fit_in_view=False))        
+            self.model.current_quad_changed.connect(lambda _: self.update_image_label(fit_in_view=False))
+            self.model.quads_changed.connect(self.save_quads)
+            self.model.quads_changed.connect(lambda _: self.update_image_label(fit_in_view=False))        
             self.model.image_files_changed.connect(self.update_image_list)
-            self.model.current_image_changed.connect(self.update_rectangle_list)
-            self.model.rectangles_changed.connect(self.update_rectangle_list)
-            self.model.selected_rectangle_changed.connect(self.selected_rectangle_changed)
-            self.model.selected_rectangle_changed.connect(lambda _: self.update_image_label(fit_in_view=False))
+            self.model.current_image_changed.connect(self.update_quad_list)
+            self.model.quads_changed.connect(self.update_quad_list)
+            self.model.selected_quad_changed.connect(self.selected_quad_changed)
+            self.model.selected_quad_changed.connect(lambda _: self.update_image_label(fit_in_view=False))
 
             # menu actions
             self.ui.actionOpen_Folder.triggered.connect(self.open_folder)
@@ -120,25 +119,25 @@ def main():
             self.ui.actionAbout.triggered.connect(self.about)
             
             # buttons
-            self.ui.deleteRectangleButton.clicked.connect(self.delete_rectangle_button_clicked)
+            self.ui.deleteQuadButton.clicked.connect(self.delete_quad_button_clicked)
 
             # image selection changed
             self.ui.imagesListWidget.currentItemChanged.connect(self.image_selection_changed)
-            self.ui.rectanglesListWidget.currentItemChanged.connect(self.rectangle_selection_changed)
+            self.ui.quadsListWidget.currentItemChanged.connect(self.quad_selection_changed)
 
 
         def enable(self):
             self.ui.actionOpen_Folder.setEnabled(False)
             self.ui.actionClose_Folder.setEnabled(True)
             self.ui.actionCrop_All.setEnabled(True)
-            self.ui.deleteRectangleButton.setEnabled(False)
+            self.ui.deleteQuadButton.setEnabled(False)
 
         
         def disable(self):
             self.ui.actionOpen_Folder.setEnabled(True)
             self.ui.actionClose_Folder.setEnabled(False)
             self.ui.actionCrop_All.setEnabled(False)
-            self.ui.deleteRectangleButton.setEnabled(False)
+            self.ui.deleteQuadButton.setEnabled(False)
 
 
         def resizeEvent(self, event):
@@ -146,8 +145,8 @@ def main():
 
 
         def keyPressEvent(self, event):
-            if event.key() == QtCore.Qt.Key_Escape:
-                self.model.current_rectangle = []
+            if event.key() == Qt.Key_Escape:
+                self.model.current_quad = []
             event.accept()
 
 
@@ -174,7 +173,7 @@ def main():
             # check if meta.json is available and load into model
             try:
                 with open(os.path.join(dir, "meta.json"), "r") as file:
-                    self.model.rectangles = defaultdict(dict, json.load(file))
+                    self.model.quads = defaultdict(dict, json.load(file))
             except FileNotFoundError:
                 pass
             self.get_image_files()
@@ -197,16 +196,16 @@ def main():
             if output_dir == "":
                 return
             # crop and rectify annotated regions from current image
-            for image_name, rectangles in self.model.rectangles.items():
+            for image_name, quads in self.model.quads.items():
                 image_file = os.path.join(self.model.image_dir, image_name)
                 image = self.load_image(image_file)
                 image_file_name, image_file_ext = os.path.splitext(os.path.basename(image_file))
-                for rectangle_id, rectangle in rectangles.items():
-                    rectangle = sort_cw(np.array(rectangle))
-                    rectangle = rectangle.reshape(4, 1, 2)
-                    image_cropped, _ = crop_module(image, rectangle, crop_width=None, crop_aspect=None, rotate_mode=None)
-                    cv2.imwrite(os.path.join(output_dir, "{}_{}{}".format(image_file_name, rectangle_id, image_file_ext)), image_cropped)
-            print("Cropped annotated rectangles for all images in opened folder")
+                for quad_id, quad in quads.items():
+                    quad = sort_cw(np.array(quad))
+                    quad = quad.reshape(4, 1, 2)
+                    image_cropped, _ = crop_module(image, quad, crop_width=None, crop_aspect=None, rotate_mode=None)
+                    cv2.imwrite(os.path.join(output_dir, "{}_{}{}".format(image_file_name, quad_id, image_file_ext)), image_cropped)
+            print("Cropped annotated quads for all images in opened folder")
 
 
         def get_image_files(self):
@@ -227,9 +226,9 @@ def main():
 
         @Slot()
         def image_selection_changed(self):
-            self.model.current_rectangle = []
+            self.model.current_quad = []
             self.model.current_image = None
-            self.model.selected_rectangle = None
+            self.model.selected_quad = None
             # get name of selected image
             current = self.ui.imagesListWidget.currentItem()
             if not current:
@@ -260,31 +259,31 @@ def main():
             
             pixmap = self.model.current_image["pixmap"].copy()
 
-            # draw current rectangle
+            # draw current quad
             painter = QPainter(pixmap)
             painter.setBrush(Qt.red)
-            for corner in self.model.current_rectangle:
+            for corner in self.model.current_quad:
                 painter.drawEllipse(QPointF(*corner), 5, 5)
             painter.end()
 
-            # draw rectangles
+            # draw quads
             try:
                 image_file = self.model.current_image["filename"]
-                rectangles = self.model.rectangles[image_file]
+                quads = self.model.quads[image_file]
             except KeyError:
                 pass
             else:
                 painter = QPainter(pixmap)
-                for rectangle_id, rectangle in rectangles.items():
+                for quad_id, quad in quads.items():
                     polygon = QPolygonF()
-                    if self.model.selected_rectangle and rectangle_id == self.model.selected_rectangle:
+                    if self.model.selected_quad and quad_id == self.model.selected_quad:
                         painter.setBrush(QColor(255, 128, 0, 255))
                     else:
                         painter.setBrush(QColor(0, 255, 0, 255))
-                    for corner in sort_cw(np.array(rectangle)):
+                    for corner in sort_cw(np.array(quad)):
                         painter.drawEllipse(QPointF(*corner), 5, 5)
                         polygon.append(QPointF(*corner))
-                    if self.model.selected_rectangle and rectangle_id == self.model.selected_rectangle:
+                    if self.model.selected_quad and quad_id == self.model.selected_quad:
                         painter.setBrush(QColor(255, 128, 0, 100))
                     else:
                         painter.setBrush(QColor(0, 255, 0, 100))
@@ -295,114 +294,114 @@ def main():
 
 
         def photoClicked(self, pos):
-            self.add_point_to_current_rectangle(pos.x(), pos.y())
+            self.add_point_to_current_quad(pos.x(), pos.y())
 
 
-        def add_point_to_current_rectangle(self, x, y):
-            current_rectangle_copy = self.model.current_rectangle.copy()
-            current_rectangle_copy.append((x, y))
-            #print("self.model.current_rectangle: ", current_rectangle_copy)
-            self.model.current_rectangle = current_rectangle_copy
-            if len(current_rectangle_copy) < 4:
+        def add_point_to_current_quad(self, x, y):
+            current_quad_copy = self.model.current_quad.copy()
+            current_quad_copy.append((x, y))
+            #print("self.model.current_quad: ", current_quad_copy)
+            self.model.current_quad = current_quad_copy
+            if len(current_quad_copy) < 4:
                 return
-            self.create_new_rectangle()
+            self.create_new_quad()
             
 
-        def create_new_rectangle(self):
+        def create_new_quad(self):
             image_file = self.model.current_image["filename"]
-            rectangles_copy = self.model.rectangles.copy()
+            quads_copy = self.model.quads.copy()
             new_id = str(uuid.uuid4())[:8]
-            rectangles_copy[image_file][new_id] = self.model.current_rectangle
-            self.model.rectangles = rectangles_copy
-            self.model.current_rectangle = []
-            #print("self.model.current_rectangle: ", self.model.current_rectangle)
-            #print("self.model.rectangles: ", self.model.rectangles)
+            quads_copy[image_file][new_id] = self.model.current_quad
+            self.model.quads = quads_copy
+            self.model.current_quad = []
+            #print("self.model.current_quad: ", self.model.current_quad)
+            #print("self.model.quads: ", self.model.quads)
 
         
         @Slot()
-        def save_rectangles(self):
+        def save_quads(self):
             if not self.model.image_dir:
                 return
             # save to disk
             with open(os.path.join(self.model.image_dir, "meta.json"), "w") as file:
-                json.dump(self.model.rectangles, file)
+                json.dump(self.model.quads, file)
 
 
         @Slot()
-        def update_rectangle_list(self):
-            self.ui.rectanglesListWidget.clear()
+        def update_quad_list(self):
+            self.ui.quadsListWidget.clear()
             if not self.model.current_image:
                 return
             try:
                 file_name = self.model.current_image["filename"]
-                rectangles = self.model.rectangles[file_name]
+                quads = self.model.quads[file_name]
             except KeyError: # no annotations yet
                 pass
             else:            
-                for rectangle_id in rectangles.keys():
-                    self.ui.rectanglesListWidget.addItem(rectangle_id)
+                for quad_id in quads.keys():
+                    self.ui.quadsListWidget.addItem(quad_id)
 
 
         @Slot()
-        def rectangle_selection_changed(self):
-            # get selected rectangle from list
-            self.model.selected_rectangle = None
-            current = self.ui.rectanglesListWidget.currentItem()
+        def quad_selection_changed(self):
+            # get selected quad from list
+            self.model.selected_quad = None
+            current = self.ui.quadsListWidget.currentItem()
             if not current:
                 return
-            self.model.selected_rectangle = current.text()
+            self.model.selected_quad = current.text()
 
 
         @Slot()
-        def selected_rectangle_changed(self):
-            if self.model.selected_rectangle:
-                self.ui.deleteRectangleButton.setEnabled(True)
+        def selected_quad_changed(self):
+            if self.model.selected_quad:
+                self.ui.deleteQuadButton.setEnabled(True)
             else:
-                self.ui.deleteRectangleButton.setEnabled(False)
+                self.ui.deleteQuadButton.setEnabled(False)
 
 
         @Slot()
-        def delete_rectangle_button_clicked(self):
+        def delete_quad_button_clicked(self):
             if not self.model.current_image:
                 return
-            if not self.model.selected_rectangle:
+            if not self.model.selected_quad:
                 return
-            #print("Deleting {}".format(self.model.selected_rectangle))
-            # delete from rectangles
+            #print("Deleting {}".format(self.model.selected_quad))
+            # delete from quads
             try:
                 image_file = self.model.current_image["filename"]
-                rectangles_copy = self.model.rectangles.copy()
+                quads_copy = self.model.quads.copy()
             except KeyError:
                 pass
             else:
-                del rectangles_copy[image_file][self.model.selected_rectangle]
-                self.model.rectangles = rectangles_copy
+                del quads_copy[image_file][self.model.selected_quad]
+                self.model.quads = quads_copy
 
 
 
     class Model(QObject):
-        rectangles_changed = Signal(object)
-        current_rectangle_changed = Signal(object)
+        quads_changed = Signal(object)
+        current_quad_changed = Signal(object)
         current_image_changed = Signal(object)
         image_files_changed = Signal(list)
-        selected_rectangle_changed = Signal(str)
+        selected_quad_changed = Signal(str)
 
         def __init__(self):
             super().__init__()
             self._image_dir = None
             self._image_files = []
-            self._rectangles = defaultdict(dict)
-            self._current_rectangle = []
+            self._quads = defaultdict(dict)
+            self._current_quad = []
             self._current_image = None
-            self._selected_rectangle = None
+            self._selected_quad = None
 
         def reset(self):
             self.image_dir = None
             self.image_files = []
-            self.rectangles = defaultdict(dict)
-            self.current_rectangle = []
+            self.quads = defaultdict(dict)
+            self.current_quad = []
             self.current_image = None
-            self.selected_rectangle = None
+            self.selected_quad = None
 
         @property
         def image_dir(self):
@@ -423,24 +422,24 @@ def main():
             #print("image_files_changed emitted")
 
         @property
-        def rectangles(self):
-            return self._rectangles
+        def quads(self):
+            return self._quads
 
-        @rectangles.setter
-        def rectangles(self, value):
-            self._rectangles = value
-            self.rectangles_changed.emit(value)
-            #print("rectangles_changed emitted")
+        @quads.setter
+        def quads(self, value):
+            self._quads = value
+            self.quads_changed.emit(value)
+            #print("quads_changed emitted")
 
         @property
-        def current_rectangle(self):
-            return self._current_rectangle
+        def current_quad(self):
+            return self._current_quad
 
-        @current_rectangle.setter
-        def current_rectangle(self, value):
-            self._current_rectangle = value
-            self.current_rectangle_changed.emit(value)
-            #print("current_rectangle_changed emitted")
+        @current_quad.setter
+        def current_quad(self, value):
+            self._current_quad = value
+            self.current_quad_changed.emit(value)
+            #print("current_quad_changed emitted")
 
         @property
         def current_image(self):
@@ -453,14 +452,14 @@ def main():
             #print("current_image_changed emitted")
 
         @property
-        def selected_rectangle(self):
-            return self._selected_rectangle
+        def selected_quad(self):
+            return self._selected_quad
 
-        @selected_rectangle.setter
-        def selected_rectangle(self, value):
-            self._selected_rectangle = value
-            self.selected_rectangle_changed.emit(value)
-            #print("selected_rectangle_changed emitted")
+        @selected_quad.setter
+        def selected_quad(self, value):
+            self._selected_quad = value
+            self.selected_quad_changed.emit(value)
+            #print("selected_quad_changed emitted")
 
 
     app = QApplication(sys.argv)
