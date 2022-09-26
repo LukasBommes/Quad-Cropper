@@ -218,8 +218,8 @@ class MainWindow(QMainWindow):
         y_scaled = event.position().y()
         x_orig = width_scale * x_scaled
         y_orig = height_scale * y_scaled
-        print(x_scaled, y_scaled, x_orig, y_orig)
-        #self.add_point_to_current_rectangle(x_orig, y_orig)
+        #print(x_scaled, y_scaled, x_orig, y_orig)
+        self.add_point_to_current_rectangle(x_orig, y_orig)
 
 
     def add_point_to_current_rectangle(self, x, y):
