@@ -1,10 +1,5 @@
 TODOs:
 
 - function to clear all rectangles
-
 - add ID to each rectangle
-- highlight selected rectangles
-
 - setup.py and dpeloyment
-
-- keyboard shortcuts ("N" for new rectangle, "esc" to aboard drawing rectangle, ...)
