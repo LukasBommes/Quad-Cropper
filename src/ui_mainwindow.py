@@ -36,19 +36,6 @@ class Ui_MainWindow(object):
         self.centralwidget.setObjectName(u"centralwidget")
         self.gridLayout = QGridLayout(self.centralwidget)
         self.gridLayout.setObjectName(u"gridLayout")
-        self.imageLabel = QLabel(self.centralwidget)
-        self.imageLabel.setObjectName(u"imageLabel")
-        sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.imageLabel.sizePolicy().hasHeightForWidth())
-        self.imageLabel.setSizePolicy(sizePolicy)
-        self.imageLabel.setMinimumSize(QSize(400, 300))
-        self.imageLabel.setScaledContents(False)
-        self.imageLabel.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignTop)
-
-        self.gridLayout.addWidget(self.imageLabel, 0, 1, 1, 1)
-
         self.verticalLayout = QVBoxLayout()
         self.verticalLayout.setSpacing(6)
         self.verticalLayout.setObjectName(u"verticalLayout")
@@ -59,11 +46,11 @@ class Ui_MainWindow(object):
 
         self.imagesListWidget = QListWidget(self.centralwidget)
         self.imagesListWidget.setObjectName(u"imagesListWidget")
-        sizePolicy1 = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Expanding)
-        sizePolicy1.setHorizontalStretch(0)
-        sizePolicy1.setVerticalStretch(0)
-        sizePolicy1.setHeightForWidth(self.imagesListWidget.sizePolicy().hasHeightForWidth())
-        self.imagesListWidget.setSizePolicy(sizePolicy1)
+        sizePolicy = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Expanding)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.imagesListWidget.sizePolicy().hasHeightForWidth())
+        self.imagesListWidget.setSizePolicy(sizePolicy)
 
         self.verticalLayout.addWidget(self.imagesListWidget)
 
@@ -74,8 +61,8 @@ class Ui_MainWindow(object):
 
         self.rectanglesListWidget = QListWidget(self.centralwidget)
         self.rectanglesListWidget.setObjectName(u"rectanglesListWidget")
-        sizePolicy1.setHeightForWidth(self.rectanglesListWidget.sizePolicy().hasHeightForWidth())
-        self.rectanglesListWidget.setSizePolicy(sizePolicy1)
+        sizePolicy.setHeightForWidth(self.rectanglesListWidget.sizePolicy().hasHeightForWidth())
+        self.rectanglesListWidget.setSizePolicy(sizePolicy)
 
         self.verticalLayout.addWidget(self.rectanglesListWidget)
 
@@ -125,7 +112,6 @@ class Ui_MainWindow(object):
         self.actionOpen_Folder.setText(QCoreApplication.translate("MainWindow", u"Open Folder...", None))
         self.actionCrop_All.setText(QCoreApplication.translate("MainWindow", u"Crop All", None))
         self.actionClose_Folder.setText(QCoreApplication.translate("MainWindow", u"Close Folder", None))
-        self.imageLabel.setText(QCoreApplication.translate("MainWindow", u"TextLabel", None))
         self.label_2.setText(QCoreApplication.translate("MainWindow", u"Images", None))
         self.label_3.setText(QCoreApplication.translate("MainWindow", u"Rectangles", None))
         self.deleteRectangleButton.setText(QCoreApplication.translate("MainWindow", u"Delete Rectangle", None))

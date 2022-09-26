@@ -8,6 +8,7 @@ from collections import defaultdict
 import numpy as np
 import cv2
 
+from PySide6 import QtCore, QtGui, QtWidgets
 from PySide6.QtWidgets import QApplication, QMainWindow, QFileDialog
 from PySide6.QtCore import Qt, QObject, Slot, Signal, QPointF
 from PySide6.QtGui import QPixmap, QImage, QPainter, QColor, QPolygonF
@@ -26,19 +27,99 @@ from src.utils import sort_cw, crop_module
 # feature: delete all existing annotations...
 
 
+class PhotoViewer(QtWidgets.QGraphicsView):
+    photoClicked = QtCore.Signal(QtCore.QPoint)
+
+    def __init__(self, parent):
+        super(PhotoViewer, self).__init__(parent)
+        self._zoom = 0
+        self._empty = True
+        self._scene = QtWidgets.QGraphicsScene(self)
+        self._photo = QtWidgets.QGraphicsPixmapItem()
+        self._scene.addItem(self._photo)
+        self.setScene(self._scene)
+        self.setTransformationAnchor(QtWidgets.QGraphicsView.AnchorUnderMouse)
+        self.setResizeAnchor(QtWidgets.QGraphicsView.AnchorUnderMouse)
+        self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.setBackgroundBrush(QtGui.QBrush(QtGui.QColor(30, 30, 30)))
+        self.setFrameShape(QtWidgets.QFrame.NoFrame)
+
+    def hasPhoto(self):
+        return not self._empty
+
+    def fitInView(self, scale=True):
+        rect = QtCore.QRectF(self._photo.pixmap().rect())
+        if not rect.isNull():
+            self.setSceneRect(rect)
+            if self.hasPhoto():
+                unity = self.transform().mapRect(QtCore.QRectF(0, 0, 1, 1))
+                self.scale(1 / unity.width(), 1 / unity.height())
+                viewrect = self.viewport().rect()
+                scenerect = self.transform().mapRect(rect)
+                factor = min(viewrect.width() / scenerect.width(),
+                             viewrect.height() / scenerect.height())
+                self.scale(factor, factor)
+            self._zoom = 0
+
+    def setPhoto(self, pixmap=None, fit_in_view=True):
+        self._zoom = 0
+        if pixmap and not pixmap.isNull():
+            self._empty = False
+            self.setDragMode(QtWidgets.QGraphicsView.ScrollHandDrag)
+            self._photo.setPixmap(pixmap)
+        else:
+            self._empty = True
+            self.setDragMode(QtWidgets.QGraphicsView.NoDrag)
+            self._photo.setPixmap(QtGui.QPixmap())
+        if fit_in_view:
+            self.fitInView()
+
+    def wheelEvent(self, event):
+        if self.hasPhoto():
+            if event.angleDelta().y() > 0:
+                factor = 1.25
+                self._zoom += 1
+            else:
+                factor = 0.8
+                self._zoom -= 1
+            if self._zoom > 0:
+                self.scale(factor, factor)
+            elif self._zoom == 0:
+                self.fitInView()
+            else:
+                self._zoom = 0
+
+    def toggleDragMode(self):
+        if self.dragMode() == QtWidgets.QGraphicsView.ScrollHandDrag:
+            self.setDragMode(QtWidgets.QGraphicsView.NoDrag)
+        elif not self._photo.pixmap().isNull():
+            self.setDragMode(QtWidgets.QGraphicsView.ScrollHandDrag)
+
+    def mousePressEvent(self, event):
+        if self._photo.isUnderMouse():
+            self.photoClicked.emit(self.mapToScene(event.pos()).toPoint())
+        super(PhotoViewer, self).mousePressEvent(event)
+
+
+
 class MainWindow(QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
-        self.ui.imageLabel.setGeometry(0, 0, 640, 512)  # initial size
         self.disable()
         self.model = Model()
 
-        self.model.current_image_changed.connect(self.update_image_label)
-        self.model.current_rectangle_changed.connect(self.update_image_label)
+        # image viewer
+        self.viewer = PhotoViewer(self)
+        self.viewer.photoClicked.connect(self.photoClicked)        
+        self.ui.gridLayout.addWidget(self.viewer, 0, 1, 1, 1)
+
+        self.model.current_image_changed.connect(lambda _: self.update_image_label(fit_in_view=True))
+        self.model.current_rectangle_changed.connect(lambda _: self.update_image_label(fit_in_view=False))
         self.model.rectangles_changed.connect(self.save_rectangles)
-        self.model.rectangles_changed.connect(self.update_image_label)        
+        self.model.rectangles_changed.connect(lambda _: self.update_image_label(fit_in_view=False))        
         self.model.image_files_changed.connect(self.update_image_list)
         self.model.current_image_changed.connect(self.update_rectangle_list)
         self.model.rectangles_changed.connect(self.update_rectangle_list)
@@ -72,7 +153,7 @@ class MainWindow(QMainWindow):
 
 
     def resizeEvent(self, event):
-        self.update_image_label()
+        self.update_image_label(fit_in_view=False)
 
 
     @Slot()
@@ -165,13 +246,8 @@ class MainWindow(QMainWindow):
 
 
     @Slot()
-    def update_image_label(self):
-        w = self.ui.imageLabel.width()
-        h = self.ui.imageLabel.height()
-
+    def update_image_label(self, fit_in_view):
         if not self.model.current_image:
-            pixmap = QPixmap("src/no_image.png")
-            self.ui.imageLabel.setPixmap(pixmap.scaled(w, h, Qt.KeepAspectRatio))
             return
         
         pixmap = self.model.current_image["pixmap"].copy()
@@ -201,25 +277,31 @@ class MainWindow(QMainWindow):
                 painter.drawConvexPolygon(polygon)
             painter.end()            
 
-        self.ui.imageLabel.setPixmap(pixmap.scaled(w, h, Qt.KeepAspectRatio))
-        self.ui.imageLabel.mousePressEvent = self.getImagePos
+        self.viewer.setPhoto(pixmap, fit_in_view)
+
+
+    def photoClicked(self, pos):
+        print("photo clicked ", pos)
+        if self.viewer.dragMode()  == QtWidgets.QGraphicsView.NoDrag:
+            self.editPixInfo.setText('%d, %d' % (pos.x(), pos.y()))
+        self.add_point_to_current_rectangle(pos.x(), pos.y())
 
     
-    def getImagePos(self, event):
-        # get current image scale
-        width_scaled = self.ui.imageLabel.pixmap().size().width() #self.ui.imageLabel.width()
-        height_scaled = self.ui.imageLabel.pixmap().size().height() #self.ui.imageLabel.height()
-        width_orig = self.model.current_image["pixmap"].size().width()
-        height_orig = self.model.current_image["pixmap"].size().height()
-        width_scale = width_orig / width_scaled
-        height_scale = height_orig / height_scaled
-        # get scaled position
-        x_scaled = event.position().x()
-        y_scaled = event.position().y()
-        x_orig = width_scale * x_scaled
-        y_orig = height_scale * y_scaled
-        #print(x_scaled, y_scaled, x_orig, y_orig)
-        self.add_point_to_current_rectangle(x_orig, y_orig)
+    # def getImagePos(self, event):
+    #     # get current image scale
+    #     width_scaled = self.ui.imageLabel.pixmap().size().width() #self.ui.imageLabel.width()
+    #     height_scaled = self.ui.imageLabel.pixmap().size().height() #self.ui.imageLabel.height()
+    #     width_orig = self.model.current_image["pixmap"].size().width()
+    #     height_orig = self.model.current_image["pixmap"].size().height()
+    #     width_scale = width_orig / width_scaled
+    #     height_scale = height_orig / height_scaled
+    #     # get scaled position
+    #     x_scaled = event.position().x()
+    #     y_scaled = event.position().y()
+    #     x_orig = width_scale * x_scaled
+    #     y_orig = height_scale * y_scaled
+    #     #print(x_scaled, y_scaled, x_orig, y_orig)
+    #     self.add_point_to_current_rectangle(x_orig, y_orig)
 
 
     def add_point_to_current_rectangle(self, x, y):
