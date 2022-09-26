@@ -18,16 +18,16 @@ def main():
     from src.utils import sort_cw, crop_module
 
 
-    class PhotoViewer(QGraphicsView):
-        photoClicked = Signal(QPoint)
+    class ImageViewer(QGraphicsView):
+        imageClicked = Signal(QPoint)
 
         def __init__(self, parent):
-            super(PhotoViewer, self).__init__(parent)
+            super(ImageViewer, self).__init__(parent)
             self._zoom = 0
             self._empty = True
             self._scene = QGraphicsScene(self)
-            self._photo = QGraphicsPixmapItem()
-            self._scene.addItem(self._photo)
+            self._image = QGraphicsPixmapItem()
+            self._scene.addItem(self._image)
             self.setScene(self._scene)
             self.setDragMode(QGraphicsView.NoDrag)
             self.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
@@ -37,14 +37,14 @@ def main():
             self.setBackgroundBrush(QBrush(QColor(30, 30, 30)))
             self.setFrameShape(QFrame.NoFrame)
 
-        def hasPhoto(self):
+        def hasImage(self):
             return not self._empty
 
         def fitInView(self, scale=True):
-            rect = QRectF(self._photo.pixmap().rect())
+            rect = QRectF(self._image.pixmap().rect())
             if not rect.isNull():
                 self.setSceneRect(rect)
-                if self.hasPhoto():
+                if self.hasImage():
                     unity = self.transform().mapRect(QRectF(0, 0, 1, 1))
                     self.scale(1 / unity.width(), 1 / unity.height())
                     viewrect = self.viewport().rect()
@@ -54,20 +54,20 @@ def main():
                     self.scale(factor, factor)
                 self._zoom = 0
 
-        def setPhoto(self, pixmap=None, fit_in_view=True):
+        def setImage(self, pixmap=None, fit_in_view=True):
             if fit_in_view:
                 self._zoom = 0
             if pixmap and not pixmap.isNull():
                 self._empty = False
-                self._photo.setPixmap(pixmap)
+                self._image.setPixmap(pixmap)
             else:
                 self._empty = True
-                self._photo.setPixmap(QPixmap())
+                self._image.setPixmap(QPixmap())
             if fit_in_view:
                 self.fitInView()
 
         def wheelEvent(self, event):
-            if self.hasPhoto():
+            if self.hasImage():
                 if event.angleDelta().y() > 0:
                     factor = 1.25
                     self._zoom += 1
@@ -82,9 +82,9 @@ def main():
                     self._zoom = 0
 
         def mousePressEvent(self, event):
-            if self._photo.isUnderMouse():
-                self.photoClicked.emit(self.mapToScene(event.pos()).toPoint())
-            super(PhotoViewer, self).mousePressEvent(event)
+            if self._image.isUnderMouse():
+                self.imageClicked.emit(self.mapToScene(event.pos()).toPoint())
+            super(ImageViewer, self).mousePressEvent(event)
 
 
 
@@ -98,8 +98,8 @@ def main():
             self.model = Model()
 
             # image viewer
-            self.viewer = PhotoViewer(self)
-            self.viewer.photoClicked.connect(self.photoClicked)        
+            self.viewer = ImageViewer(self)
+            self.viewer.imageClicked.connect(self.imageClicked)        
             self.ui.gridLayout.addWidget(self.viewer, 0, 1, 1, 1)
 
             self.model.current_image_changed.connect(lambda _: self.update_image_label(fit_in_view=True))
@@ -290,10 +290,10 @@ def main():
                     painter.drawConvexPolygon(polygon)
                 painter.end()            
 
-            self.viewer.setPhoto(pixmap, fit_in_view)
+            self.viewer.setImage(pixmap, fit_in_view)
 
 
-        def photoClicked(self, pos):
+        def imageClicked(self, pos):
             self.add_point_to_current_quad(pos.x(), pos.y())
 
 
