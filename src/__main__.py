@@ -14,7 +14,6 @@ def main():
     from PySide6.QtCore import Qt, QObject, Slot, Signal, QPoint, QPointF, QRectF
     from PySide6.QtGui import QPixmap, QImage, QPainter, QBrush, QColor, QPolygonF
     from src.ui_mainwindow import Ui_MainWindow
-
     from src.utils import sort_cw, crop_module
 
 
@@ -120,7 +119,8 @@ def main():
             self.ui.actionAbout.triggered.connect(self.about)
             
             # buttons
-            self.ui.deleteQuadButton.clicked.connect(self.delete_quad_button_clicked)
+            self.ui.deleteSelectedQuadButton.clicked.connect(self.delete_selected_quad_button_clicked)
+            self.ui.deleteAllQuadsButton.clicked.connect(self.delete_all_quads_button_clicked)
 
             # image selection changed
             self.ui.imagesListWidget.currentItemChanged.connect(self.image_selection_changed)
@@ -132,7 +132,8 @@ def main():
             self.ui.actionClose_Folder.setEnabled(True)
             self.ui.actionCrop_All.setEnabled(True)
             self.ui.actionClear_all_quadrilaterals.setEnabled(True)
-            self.ui.deleteQuadButton.setEnabled(False)
+            self.ui.deleteSelectedQuadButton.setEnabled(False)
+            self.ui.deleteAllQuadsButton.setEnabled(False)
 
         
         def disable(self):
@@ -140,7 +141,8 @@ def main():
             self.ui.actionClose_Folder.setEnabled(False)
             self.ui.actionCrop_All.setEnabled(False)
             self.ui.actionClear_all_quadrilaterals.setEnabled(False)
-            self.ui.deleteQuadButton.setEnabled(False)
+            self.ui.deleteSelectedQuadButton.setEnabled(False)
+            self.ui.deleteAllQuadsButton.setEnabled(False)
 
 
         def resizeEvent(self, event):
@@ -193,12 +195,13 @@ def main():
         
         @Slot()
         def clear_all_quadrilaterals(self):
+            if not self.model.image_dir:
+                return
             # show confirmation dialog and if success try to delete meta.json
-            num_quads = sum([len(q) for q in self.model.quads.values()])
             delete_dialog_title = "Delete All Quadrilaterals"
             delete_dialog_text = ("Are you sure you want to permanetely delete all {} "
                                   "annotated quadrilaterals from all images in {}?".format(
-                                  num_quads, self.model.image_dir))
+                                  self.get_num_quads(), self.model.image_dir))
             delete_dialog = QMessageBox(
                 QMessageBox.Question, 
                 delete_dialog_title, 
@@ -214,6 +217,18 @@ def main():
                     self.model.quads = defaultdict(dict)
                     self.model.current_quad = []
                     self.model.selected_quad = None
+
+
+        def get_num_quads(self, image_file=None):
+            num_quads = 0
+            if image_file:
+                try:
+                    num_quads = sum([len(q) for q in self.model.quads[image_file].values()])
+                except KeyError:
+                    pass
+            else:
+                num_quads = sum([len(q) for q in self.model.quads.values()])
+            return num_quads
 
 
         @Slot()
@@ -368,6 +383,11 @@ def main():
             else:            
                 for quad_id in quads.keys():
                     self.ui.quadsListWidget.addItem(quad_id)
+                # update buttons
+                if self.get_num_quads(file_name):
+                    self.ui.deleteAllQuadsButton.setEnabled(True)
+                else:
+                    self.ui.deleteAllQuadsButton.setEnabled(False)
 
 
         @Slot()
@@ -383,13 +403,13 @@ def main():
         @Slot()
         def selected_quad_changed(self):
             if self.model.selected_quad:
-                self.ui.deleteQuadButton.setEnabled(True)
+                self.ui.deleteSelectedQuadButton.setEnabled(True)
             else:
-                self.ui.deleteQuadButton.setEnabled(False)
+                self.ui.deleteSelectedQuadButton.setEnabled(False)
 
 
         @Slot()
-        def delete_quad_button_clicked(self):
+        def delete_selected_quad_button_clicked(self):
             if not self.model.current_image:
                 return
             if not self.model.selected_quad:
@@ -403,6 +423,20 @@ def main():
                 pass
             else:
                 del quads_copy[image_file][self.model.selected_quad]
+                self.model.quads = quads_copy
+
+        
+        @Slot()
+        def delete_all_quads_button_clicked(self):
+            if not self.model.image_dir:
+                return
+            try:
+                image_file = self.model.current_image["filename"]
+                quads_copy = self.model.quads.copy()
+            except KeyError:
+                pass
+            else:
+                del quads_copy[image_file]
                 self.model.quads = quads_copy
 
 

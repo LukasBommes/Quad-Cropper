@@ -18,14 +18,14 @@ from PySide6.QtGui import (QAction, QBrush, QColor, QConicalGradient,
     QTransform)
 from PySide6.QtWidgets import (QApplication, QGridLayout, QHBoxLayout, QLabel,
     QListWidget, QListWidgetItem, QMainWindow, QMenu,
-    QMenuBar, QPushButton, QSizePolicy, QSpacerItem,
-    QStatusBar, QVBoxLayout, QWidget)
+    QMenuBar, QPushButton, QSizePolicy, QStatusBar,
+    QVBoxLayout, QWidget)
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(682, 436)
+        MainWindow.resize(570, 436)
         self.actionOpen_Folder = QAction(MainWindow)
         self.actionOpen_Folder.setObjectName(u"actionOpen_Folder")
         self.actionCrop_All = QAction(MainWindow)
@@ -72,14 +72,22 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_2 = QHBoxLayout()
         self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
-        self.deleteQuadButton = QPushButton(self.centralwidget)
-        self.deleteQuadButton.setObjectName(u"deleteQuadButton")
+        self.deleteSelectedQuadButton = QPushButton(self.centralwidget)
+        self.deleteSelectedQuadButton.setObjectName(u"deleteSelectedQuadButton")
+        sizePolicy1 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
+        sizePolicy1.setHorizontalStretch(0)
+        sizePolicy1.setVerticalStretch(0)
+        sizePolicy1.setHeightForWidth(self.deleteSelectedQuadButton.sizePolicy().hasHeightForWidth())
+        self.deleteSelectedQuadButton.setSizePolicy(sizePolicy1)
 
-        self.horizontalLayout_2.addWidget(self.deleteQuadButton)
+        self.horizontalLayout_2.addWidget(self.deleteSelectedQuadButton)
 
-        self.horizontalSpacer = QSpacerItem(100, 20, QSizePolicy.Fixed, QSizePolicy.Minimum)
+        self.deleteAllQuadsButton = QPushButton(self.centralwidget)
+        self.deleteAllQuadsButton.setObjectName(u"deleteAllQuadsButton")
+        sizePolicy1.setHeightForWidth(self.deleteAllQuadsButton.sizePolicy().hasHeightForWidth())
+        self.deleteAllQuadsButton.setSizePolicy(sizePolicy1)
 
-        self.horizontalLayout_2.addItem(self.horizontalSpacer)
+        self.horizontalLayout_2.addWidget(self.deleteAllQuadsButton)
 
 
         self.verticalLayout.addLayout(self.horizontalLayout_2)
@@ -90,7 +98,7 @@ class Ui_MainWindow(object):
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(MainWindow)
         self.menubar.setObjectName(u"menubar")
-        self.menubar.setGeometry(QRect(0, 0, 682, 22))
+        self.menubar.setGeometry(QRect(0, 0, 570, 22))
         self.menuFile = QMenu(self.menubar)
         self.menuFile.setObjectName(u"menuFile")
         self.menuCrop = QMenu(self.menubar)
@@ -125,7 +133,8 @@ class Ui_MainWindow(object):
         self.actionClear_all_quadrilaterals.setText(QCoreApplication.translate("MainWindow", u"Clear All Quadrilaterals", None))
         self.label_2.setText(QCoreApplication.translate("MainWindow", u"Images", None))
         self.label_3.setText(QCoreApplication.translate("MainWindow", u"Quadrilaterals", None))
-        self.deleteQuadButton.setText(QCoreApplication.translate("MainWindow", u"Delete Quadrilateral", None))
+        self.deleteSelectedQuadButton.setText(QCoreApplication.translate("MainWindow", u"Delete Selected", None))
+        self.deleteAllQuadsButton.setText(QCoreApplication.translate("MainWindow", u"Delete All", None))
         self.menuFile.setTitle(QCoreApplication.translate("MainWindow", u"File", None))
         self.menuCrop.setTitle(QCoreApplication.translate("MainWindow", u"Actions", None))
         self.menuHelp.setTitle(QCoreApplication.translate("MainWindow", u"Help", None))

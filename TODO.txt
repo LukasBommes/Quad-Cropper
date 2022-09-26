@@ -1,5 +1,5 @@
 TODOs:
 
-- function to clear all rectangles
+- make marker size dependend on image size
 - add ID to each rectangle
 - write readme (usage instructions)
