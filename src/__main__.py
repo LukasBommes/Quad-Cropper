@@ -298,6 +298,7 @@ def main():
         @Slot()
         def update_image_label(self, fit_in_view):
             if not self.model.current_image:
+                self.viewer.setImage(None)
                 return
             
             pixmap = self.model.current_image["pixmap"].copy()
