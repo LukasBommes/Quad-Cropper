@@ -22,7 +22,7 @@ setup(
         "PySide6>=6.2.1,<7",
     ],
     python_requires='>=3.8, <4',
-    entry_points={"gui_scripts": ['viewer = src.__main__:main']},
+    entry_points={"gui_scripts": ['quadcropper = src.__main__:main']},
     keywords=["quadcropper", "desktop-app", "image", "crop", 
               "perspective", "crop-image", "homography", 
               "recitfy", "pyside6"
