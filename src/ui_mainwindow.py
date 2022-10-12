@@ -16,16 +16,17 @@ from PySide6.QtGui import (QAction, QBrush, QColor, QConicalGradient,
     QIcon, QImage, QKeySequence, QLinearGradient,
     QPainter, QPalette, QPixmap, QRadialGradient,
     QTransform)
-from PySide6.QtWidgets import (QApplication, QGridLayout, QHBoxLayout, QLabel,
-    QListWidget, QListWidgetItem, QMainWindow, QMenu,
-    QMenuBar, QPushButton, QSizePolicy, QStatusBar,
+from PySide6.QtWidgets import (QApplication, QCheckBox, QFormLayout, QGridLayout,
+    QGroupBox, QHBoxLayout, QLabel, QListWidget,
+    QListWidgetItem, QMainWindow, QMenu, QMenuBar,
+    QPushButton, QSizePolicy, QSpinBox, QStatusBar,
     QVBoxLayout, QWidget)
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(570, 436)
+        MainWindow.resize(769, 834)
         self.actionOpen_Folder = QAction(MainWindow)
         self.actionOpen_Folder.setObjectName(u"actionOpen_Folder")
         self.actionCrop_All = QAction(MainWindow)
@@ -43,10 +44,10 @@ class Ui_MainWindow(object):
         self.verticalLayout = QVBoxLayout()
         self.verticalLayout.setSpacing(6)
         self.verticalLayout.setObjectName(u"verticalLayout")
-        self.label_2 = QLabel(self.centralwidget)
-        self.label_2.setObjectName(u"label_2")
+        self.imagesLabel = QLabel(self.centralwidget)
+        self.imagesLabel.setObjectName(u"imagesLabel")
 
-        self.verticalLayout.addWidget(self.label_2)
+        self.verticalLayout.addWidget(self.imagesLabel)
 
         self.imagesListWidget = QListWidget(self.centralwidget)
         self.imagesListWidget.setObjectName(u"imagesListWidget")
@@ -58,10 +59,10 @@ class Ui_MainWindow(object):
 
         self.verticalLayout.addWidget(self.imagesListWidget)
 
-        self.label_3 = QLabel(self.centralwidget)
-        self.label_3.setObjectName(u"label_3")
+        self.quadrilateralsLabel = QLabel(self.centralwidget)
+        self.quadrilateralsLabel.setObjectName(u"quadrilateralsLabel")
 
-        self.verticalLayout.addWidget(self.label_3)
+        self.verticalLayout.addWidget(self.quadrilateralsLabel)
 
         self.quadsListWidget = QListWidget(self.centralwidget)
         self.quadsListWidget.setObjectName(u"quadsListWidget")
@@ -92,13 +93,66 @@ class Ui_MainWindow(object):
 
         self.verticalLayout.addLayout(self.horizontalLayout_2)
 
+        self.cropGroupBox = QGroupBox(self.centralwidget)
+        self.cropGroupBox.setObjectName(u"cropGroupBox")
+        sizePolicy2 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
+        sizePolicy2.setHorizontalStretch(0)
+        sizePolicy2.setVerticalStretch(0)
+        sizePolicy2.setHeightForWidth(self.cropGroupBox.sizePolicy().hasHeightForWidth())
+        self.cropGroupBox.setSizePolicy(sizePolicy2)
+        self.gridLayout_2 = QGridLayout(self.cropGroupBox)
+        self.gridLayout_2.setObjectName(u"gridLayout_2")
+        self.gridLayout_2.setContentsMargins(-1, -1, 9, -1)
+        self.cropAllButton = QPushButton(self.cropGroupBox)
+        self.cropAllButton.setObjectName(u"cropAllButton")
+
+        self.gridLayout_2.addWidget(self.cropAllButton, 2, 0, 1, 1)
+
+        self.formLayout_2 = QFormLayout()
+        self.formLayout_2.setObjectName(u"formLayout_2")
+        self.patchWidthLabel = QLabel(self.cropGroupBox)
+        self.patchWidthLabel.setObjectName(u"patchWidthLabel")
+
+        self.formLayout_2.setWidget(1, QFormLayout.LabelRole, self.patchWidthLabel)
+
+        self.patchWidthSpinBox = QSpinBox(self.cropGroupBox)
+        self.patchWidthSpinBox.setObjectName(u"patchWidthSpinBox")
+        self.patchWidthSpinBox.setMaximum(99999999)
+        self.patchWidthSpinBox.setSingleStep(10)
+
+        self.formLayout_2.setWidget(1, QFormLayout.FieldRole, self.patchWidthSpinBox)
+
+        self.patchHeightLabel = QLabel(self.cropGroupBox)
+        self.patchHeightLabel.setObjectName(u"patchHeightLabel")
+
+        self.formLayout_2.setWidget(2, QFormLayout.LabelRole, self.patchHeightLabel)
+
+        self.patchHeightSpinBox = QSpinBox(self.cropGroupBox)
+        self.patchHeightSpinBox.setObjectName(u"patchHeightSpinBox")
+        self.patchHeightSpinBox.setMaximum(99999999)
+        self.patchHeightSpinBox.setSingleStep(10)
+
+        self.formLayout_2.setWidget(2, QFormLayout.FieldRole, self.patchHeightSpinBox)
+
+
+        self.gridLayout_2.addLayout(self.formLayout_2, 1, 0, 1, 1)
+
+        self.autoPatchSizeCheckbox = QCheckBox(self.cropGroupBox)
+        self.autoPatchSizeCheckbox.setObjectName(u"autoPatchSizeCheckbox")
+        self.autoPatchSizeCheckbox.setChecked(True)
+
+        self.gridLayout_2.addWidget(self.autoPatchSizeCheckbox, 0, 0, 1, 1)
+
+
+        self.verticalLayout.addWidget(self.cropGroupBox)
+
 
         self.gridLayout.addLayout(self.verticalLayout, 0, 0, 1, 1)
 
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(MainWindow)
         self.menubar.setObjectName(u"menubar")
-        self.menubar.setGeometry(QRect(0, 0, 570, 22))
+        self.menubar.setGeometry(QRect(0, 0, 769, 22))
         self.menuFile = QMenu(self.menubar)
         self.menuFile.setObjectName(u"menuFile")
         self.menuCrop = QMenu(self.menubar)
@@ -115,7 +169,6 @@ class Ui_MainWindow(object):
         self.menubar.addAction(self.menuHelp.menuAction())
         self.menuFile.addAction(self.actionOpen_Folder)
         self.menuFile.addAction(self.actionClose_Folder)
-        self.menuCrop.addAction(self.actionCrop_All)
         self.menuCrop.addAction(self.actionClear_all_quadrilaterals)
         self.menuHelp.addAction(self.actionAbout)
 
@@ -131,10 +184,15 @@ class Ui_MainWindow(object):
         self.actionClose_Folder.setText(QCoreApplication.translate("MainWindow", u"Close Folder", None))
         self.actionAbout.setText(QCoreApplication.translate("MainWindow", u"About", None))
         self.actionClear_all_quadrilaterals.setText(QCoreApplication.translate("MainWindow", u"Clear All Quadrilaterals", None))
-        self.label_2.setText(QCoreApplication.translate("MainWindow", u"Images", None))
-        self.label_3.setText(QCoreApplication.translate("MainWindow", u"Quadrilaterals", None))
+        self.imagesLabel.setText(QCoreApplication.translate("MainWindow", u"Images", None))
+        self.quadrilateralsLabel.setText(QCoreApplication.translate("MainWindow", u"Quadrilaterals", None))
         self.deleteSelectedQuadButton.setText(QCoreApplication.translate("MainWindow", u"Delete Selected", None))
         self.deleteAllQuadsButton.setText(QCoreApplication.translate("MainWindow", u"Delete All", None))
+        self.cropGroupBox.setTitle(QCoreApplication.translate("MainWindow", u"Crop", None))
+        self.cropAllButton.setText(QCoreApplication.translate("MainWindow", u"Crop All", None))
+        self.patchWidthLabel.setText(QCoreApplication.translate("MainWindow", u"Patch Width (px)", None))
+        self.patchHeightLabel.setText(QCoreApplication.translate("MainWindow", u"Patch Height (px)", None))
+        self.autoPatchSizeCheckbox.setText(QCoreApplication.translate("MainWindow", u"Automatic patch size", None))
         self.menuFile.setTitle(QCoreApplication.translate("MainWindow", u"File", None))
         self.menuCrop.setTitle(QCoreApplication.translate("MainWindow", u"Actions", None))
         self.menuHelp.setTitle(QCoreApplication.translate("MainWindow", u"Help", None))

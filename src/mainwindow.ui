@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>570</width>
-    <height>436</height>
+    <width>769</width>
+    <height>834</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -21,7 +21,7 @@
        <number>6</number>
       </property>
       <item>
-       <widget class="QLabel" name="label_2">
+       <widget class="QLabel" name="imagesLabel">
         <property name="text">
          <string>Images</string>
         </property>
@@ -38,7 +38,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QLabel" name="label_3">
+       <widget class="QLabel" name="quadrilateralsLabel">
         <property name="text">
          <string>Quadrilaterals</string>
         </property>
@@ -84,6 +84,79 @@
         </item>
        </layout>
       </item>
+      <item>
+       <widget class="QGroupBox" name="cropGroupBox">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="title">
+         <string>Crop</string>
+        </property>
+        <layout class="QGridLayout" name="gridLayout_2">
+         <property name="rightMargin">
+          <number>9</number>
+         </property>
+         <item row="2" column="0">
+          <widget class="QPushButton" name="cropAllButton">
+           <property name="text">
+            <string>Crop All</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <layout class="QFormLayout" name="formLayout_2">
+           <item row="1" column="0">
+            <widget class="QLabel" name="patchWidthLabel">
+             <property name="text">
+              <string>Patch Width (px)</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QSpinBox" name="patchWidthSpinBox">
+             <property name="maximum">
+              <number>99999999</number>
+             </property>
+             <property name="singleStep">
+              <number>10</number>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="0">
+            <widget class="QLabel" name="patchHeightLabel">
+             <property name="text">
+              <string>Patch Height (px)</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="1">
+            <widget class="QSpinBox" name="patchHeightSpinBox">
+             <property name="maximum">
+              <number>99999999</number>
+             </property>
+             <property name="singleStep">
+              <number>10</number>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item row="0" column="0">
+          <widget class="QCheckBox" name="autoPatchSizeCheckbox">
+           <property name="text">
+            <string>Automatic patch size</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
      </layout>
     </item>
    </layout>
@@ -93,7 +166,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>570</width>
+     <width>769</width>
      <height>22</height>
     </rect>
    </property>
@@ -108,7 +181,6 @@
     <property name="title">
      <string>Actions</string>
     </property>
-    <addaction name="actionCrop_All"/>
     <addaction name="actionClear_all_quadrilaterals"/>
    </widget>
    <widget class="QMenu" name="menuHelp">

@@ -92,9 +92,9 @@ def main():
             super(MainWindow, self).__init__()
             self.ui = Ui_MainWindow()
             self.ui.setupUi(self)
-            self.setWindowTitle("QuadCropper")
-            self.disable()
+            self.setWindowTitle("QuadCropper")            
             self.model = Model()
+            self.disable()
 
             # image viewer
             self.viewer = ImageViewer(self)
@@ -114,17 +114,24 @@ def main():
             self.model.quads_changed.connect(self.update_quad_list)
             self.model.selected_quad_changed.connect(self.selected_quad_changed)
             self.model.selected_quad_changed.connect(lambda _: self.update_image_label(fit_in_view=False))
+            self.ui.autoPatchSizeCheckbox.stateChanged.connect(lambda value: setattr(self.model, 'auto_patch_size', bool(value)))
+            self.model.auto_patch_size_changed.connect(lambda value: self.auto_patch_size_changed(value))
+            self.model.auto_patch_size_changed.connect(self.ui.autoPatchSizeCheckbox.setChecked)
+            self.model.patch_width_changed.connect(self.ui.patchWidthSpinBox.setValue)
+            self.ui.patchWidthSpinBox.valueChanged.connect(lambda value: setattr(self.model, 'patch_width', value))
+            self.model.patch_height_changed.connect(self.ui.patchHeightSpinBox.setValue)
+            self.ui.patchHeightSpinBox.valueChanged.connect(lambda value: setattr(self.model, 'patch_height', value))
 
             # menu actions
             self.ui.actionOpen_Folder.triggered.connect(self.open_folder)
             self.ui.actionClose_Folder.triggered.connect(self.close_folder)
             self.ui.actionClear_all_quadrilaterals.triggered.connect(self.clear_all_quadrilaterals)
-            self.ui.actionCrop_All.triggered.connect(self.crop_all)
             self.ui.actionAbout.triggered.connect(self.about)
             
             # buttons
             self.ui.deleteSelectedQuadButton.clicked.connect(self.delete_selected_quad_button_clicked)
             self.ui.deleteAllQuadsButton.clicked.connect(self.delete_all_quads_button_clicked)
+            self.ui.cropAllButton.clicked.connect(self.crop_all)
 
             # image selection changed
             self.ui.imagesListWidget.currentItemChanged.connect(self.image_selection_changed)
@@ -137,19 +144,29 @@ def main():
         def enable(self):
             self.ui.actionOpen_Folder.setEnabled(False)
             self.ui.actionClose_Folder.setEnabled(True)
-            self.ui.actionCrop_All.setEnabled(True)
             self.ui.actionClear_all_quadrilaterals.setEnabled(True)
             self.ui.deleteSelectedQuadButton.setEnabled(False)
             self.ui.deleteAllQuadsButton.setEnabled(False)
+            self.ui.cropAllButton.setEnabled(True)
+            self.ui.autoPatchSizeCheckbox.setEnabled(True)
+            self.ui.patchWidthSpinBox.setEnabled(False)
+            self.ui.patchHeightSpinBox.setEnabled(False)
+            self.ui.patchHeightLabel.setEnabled(False)
+            self.ui.patchWidthLabel.setEnabled(False)
 
         
         def disable(self):
             self.ui.actionOpen_Folder.setEnabled(True)
-            self.ui.actionClose_Folder.setEnabled(False)
-            self.ui.actionCrop_All.setEnabled(False)
+            self.ui.actionClose_Folder.setEnabled(False)            
             self.ui.actionClear_all_quadrilaterals.setEnabled(False)
             self.ui.deleteSelectedQuadButton.setEnabled(False)
             self.ui.deleteAllQuadsButton.setEnabled(False)
+            self.ui.cropAllButton.setEnabled(False)
+            self.ui.autoPatchSizeCheckbox.setEnabled(False)
+            self.ui.patchWidthSpinBox.setEnabled(False)
+            self.ui.patchHeightSpinBox.setEnabled(False)
+            self.ui.patchHeightLabel.setEnabled(False)
+            self.ui.patchWidthLabel.setEnabled(False)
 
 
         def resizeEvent(self, event):
@@ -212,6 +229,7 @@ def main():
         @Slot()
         def close_folder(self):
             self.model.reset()
+            print(self.model.auto_patch_size)
             self.disable()
             print("Dataset closed")
 
@@ -262,6 +280,12 @@ def main():
             if output_dir == "":
                 return
             # crop and rectify annotated regions from current image
+            if self.model.auto_patch_size:
+                crop_width = None
+                crop_aspect = None
+            else:
+                crop_width = self.model.patch_width
+                crop_aspect = self.model.patch_height / self.model.patch_width
             for image_name, quads in self.model.quads.items():
                 image_file = os.path.join(self.model.image_dir, image_name)
                 image = self.load_image(image_file)
@@ -269,8 +293,10 @@ def main():
                 for quad_id, quad in quads.items():
                     quad = sort_cw(np.array(quad))
                     quad = quad.reshape(4, 1, 2)
-                    image_cropped, _ = crop_module(image, quad, crop_width=None, crop_aspect=None, rotate_mode=None)
-                    cv2.imwrite(os.path.join(output_dir, "{}_{}{}".format(image_file_name, quad_id, image_file_ext)), image_cropped)
+                    image_cropped, _ = crop_module(
+                        image, quad, crop_width=crop_width, crop_aspect=crop_aspect, rotate_mode=None)
+                    cv2.imwrite(os.path.join(output_dir, "{}_{}{}".format(
+                        image_file_name, quad_id, image_file_ext)), image_cropped)
             print("Cropped annotated quads for all images in opened folder")
 
 
@@ -466,6 +492,12 @@ def main():
                 self.model.quads = quads_copy
 
 
+        @Slot()
+        def auto_patch_size_changed(self, auto_patch_size):
+            self.ui.patchWidthSpinBox.setEnabled(not auto_patch_size)
+            self.ui.patchHeightSpinBox.setEnabled(not auto_patch_size)
+
+
 
     class Model(QObject):
         quads_changed = Signal(object)
@@ -473,6 +505,9 @@ def main():
         current_image_changed = Signal(object)
         image_files_changed = Signal(list)
         selected_quad_changed = Signal(str)
+        auto_patch_size_changed = Signal(bool)
+        patch_width_changed = Signal(int)
+        patch_height_changed = Signal(int)
 
         def __init__(self):
             super().__init__()
@@ -482,6 +517,9 @@ def main():
             self._current_quad = []
             self._current_image = None
             self._selected_quad = None
+            self._auto_patch_size = True
+            self._patch_width = 0
+            self._patch_height = 0
 
         def reset(self):
             self.image_dir = None
@@ -490,6 +528,9 @@ def main():
             self.current_quad = []
             self.current_image = None
             self.selected_quad = None
+            self.auto_patch_size = True
+            self.patch_width = 0
+            self.patch_height = 0
 
         @property
         def image_dir(self):
@@ -548,6 +589,33 @@ def main():
             self._selected_quad = value
             self.selected_quad_changed.emit(value)
             #print("selected_quad_changed emitted")
+
+        @property
+        def auto_patch_size(self):
+            return self._auto_patch_size
+
+        @auto_patch_size.setter
+        def auto_patch_size(self, value):
+            self._auto_patch_size = value
+            self.auto_patch_size_changed.emit(value)
+
+        @property
+        def patch_width(self):
+            return self._patch_width
+
+        @patch_width.setter
+        def patch_width(self, value):
+            self._patch_width = value
+            self.patch_width_changed.emit(value)
+
+        @property
+        def patch_height(self):
+            return self._patch_height
+
+        @patch_height.setter
+        def patch_height(self, value):
+            self._patch_height = value
+            self.patch_height_changed.emit(value)
 
 
     app = QApplication(sys.argv)
