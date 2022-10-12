@@ -276,10 +276,12 @@ def main():
 
         def get_image_files(self):
             image_files = []
-            for file_type in ["jpg", "JPG", "png", "PNG", "tiff", "TIFF"]:
+            for file_type in ["jpg", "jpeg", "png"]:
                 files = sorted(glob.glob(os.path.join(self.model.image_dir, "*.{}".format(file_type))))
+                files_upper = sorted(glob.glob(os.path.join(self.model.image_dir, "*.{}".format(file_type.upper()))))
                 image_files.extend(files)
-            self.model.image_files = image_files
+                image_files.extend(files_upper)
+            self.model.image_files = list(set(image_files))  # remove duplicates
 
         
         @Slot()
