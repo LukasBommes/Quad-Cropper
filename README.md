@@ -31,14 +31,25 @@ python3 -m pip install --upgrade quadcropper
 ```
 Note, that depending on your platform you will have to replace `python3` with `python` or `py` in the commands above.
 
-After successful installation you can start QuadCropper simply by typing in the terminal
+
+## Usage
+
+### Start QuadCropper
+
+Open a terminal and navigate to the installation directory of QuadCropper. Activate the Python virtual environment with 
+```
+source env/bin/activate
+```
+on Linux or
+```
+.\env\Scripts\activate
+```
+on Windows.
+
+Then, start QuadCropper with the command
 ```
 quadcropper
 ```
-Note, that to start QuadCropper, you will always have to activate the Python virtual environment first.
-
-
-## Usage
 
 ### Open an Image Directory 
 
