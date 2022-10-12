@@ -136,7 +136,6 @@ def main():
                 self.move(window_position)
 
 
-        @Slot()
         def open_folder(self):
             dir = QFileDialog.getExistingDirectory(
                 self, caption="Open Dataset", options=QFileDialog.ShowDirsOnly)
@@ -154,7 +153,6 @@ def main():
             print("Dataset opened")
 
 
-        @Slot()
         def close_folder(self):
             self.model.reset()
             print(self.model.auto_patch_size)
@@ -174,7 +172,6 @@ def main():
             return num_quads
 
 
-        @Slot()
         def crop_all(self):
             # select output directory
             output_dir = QFileDialog.getExistingDirectory(
@@ -212,7 +209,6 @@ def main():
             self.model.image_files = list(set(image_files))  # remove duplicates
 
         
-        @Slot()
         def update_image_list(self, image_files):
             self.ui.imagesListWidget.clear()
             for image_file in image_files:
@@ -220,7 +216,6 @@ def main():
                 self.ui.imagesListWidget.addItem(file_name)
 
 
-        @Slot()
         def image_selection_changed(self):
             self.model.current_quad = []
             self.model.current_image = None
@@ -248,7 +243,6 @@ def main():
             return cv2.imread(image_file)
 
 
-        @Slot()
         def update_image_label(self, fit_in_view):
             if not self.model.current_image:
                 self.viewer.setImage(None)
@@ -315,7 +309,6 @@ def main():
             #print("self.model.quads: ", self.model.quads)
 
         
-        @Slot()
         def save_quads(self):
             if not self.model.image_dir:
                 return
@@ -324,7 +317,6 @@ def main():
                 json.dump(self.model.quads, file)
 
 
-        @Slot()
         def update_quad_list(self):
             self.ui.quadsListWidget.clear()
             if not self.model.current_image:
@@ -344,7 +336,6 @@ def main():
                     self.ui.deleteAllQuadsButton.setEnabled(False)
 
 
-        @Slot()
         def quad_selection_changed(self):
             # get selected quad from list
             self.model.selected_quad = None
@@ -354,7 +345,6 @@ def main():
             self.model.selected_quad = current.text()
 
 
-        @Slot()
         def selected_quad_changed(self):
             if self.model.selected_quad:
                 self.ui.deleteSelectedQuadButton.setEnabled(True)
@@ -362,7 +352,6 @@ def main():
                 self.ui.deleteSelectedQuadButton.setEnabled(False)
 
 
-        @Slot()
         def delete_selected_quad_button_clicked(self):
             if not self.model.current_image:
                 return
@@ -380,7 +369,6 @@ def main():
                 self.model.quads = quads_copy
 
         
-        @Slot()
         def delete_all_quads_button_clicked(self):
             if not self.model.image_dir:
                 return
@@ -394,7 +382,6 @@ def main():
                 self.model.quads = quads_copy
 
 
-        @Slot()
         def auto_patch_size_changed(self, auto_patch_size):
             self.ui.patchWidthSpinBox.setEnabled(not auto_patch_size)
             self.ui.patchHeightSpinBox.setEnabled(not auto_patch_size)
