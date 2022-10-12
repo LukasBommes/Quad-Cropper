@@ -7,7 +7,7 @@ name = "src"
 sys.path.insert(0, realpath(dirname(__file__))+"/"+name)
 
 setup(
-    name="Quad-Cropper",
+    name="quadcropper",
     maintainer="Lukas Bommes",
     url='https://github.com/LukasBommes/Quad-Cropper',
     version="0.1", 
