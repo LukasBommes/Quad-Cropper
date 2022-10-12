@@ -125,7 +125,6 @@ def main():
             # menu actions
             self.ui.actionOpen_Folder.triggered.connect(self.open_folder)
             self.ui.actionClose_Folder.triggered.connect(self.close_folder)
-            self.ui.actionClear_all_quadrilaterals.triggered.connect(self.clear_all_quadrilaterals)
             self.ui.actionAbout.triggered.connect(self.about)
             
             # buttons
@@ -144,7 +143,6 @@ def main():
         def enable(self):
             self.ui.actionOpen_Folder.setEnabled(False)
             self.ui.actionClose_Folder.setEnabled(True)
-            self.ui.actionClear_all_quadrilaterals.setEnabled(True)
             self.ui.deleteSelectedQuadButton.setEnabled(False)
             self.ui.deleteAllQuadsButton.setEnabled(False)
             self.ui.cropAllButton.setEnabled(True)
@@ -158,7 +156,6 @@ def main():
         def disable(self):
             self.ui.actionOpen_Folder.setEnabled(True)
             self.ui.actionClose_Folder.setEnabled(False)            
-            self.ui.actionClear_all_quadrilaterals.setEnabled(False)
             self.ui.deleteSelectedQuadButton.setEnabled(False)
             self.ui.deleteAllQuadsButton.setEnabled(False)
             self.ui.cropAllButton.setEnabled(False)
@@ -232,32 +229,6 @@ def main():
             print(self.model.auto_patch_size)
             self.disable()
             print("Dataset closed")
-
-        
-        @Slot()
-        def clear_all_quadrilaterals(self):
-            if not self.model.image_dir:
-                return
-            # show confirmation dialog and if success try to delete meta.json
-            delete_dialog_title = "Delete All Quadrilaterals"
-            delete_dialog_text = ("Are you sure you want to permanetely delete all {} "
-                                  "annotated quadrilaterals from all images in {}?".format(
-                                  self.get_num_quads(), self.model.image_dir))
-            delete_dialog = QMessageBox(
-                QMessageBox.Question, 
-                delete_dialog_title, 
-                delete_dialog_text, 
-                QMessageBox.Yes|QMessageBox.No)            
-            if delete_dialog.exec() == QMessageBox.Yes:
-                quads_file = os.path.join(self.model.image_dir, "meta.json")
-                try:
-                    os.remove(quads_file)
-                except FileNotFoundError:
-                    print("No meta file found in {}. Skipping deletion.".format(quads_file))
-                else:
-                    self.model.quads = defaultdict(dict)
-                    self.model.current_quad = []
-                    self.model.selected_quad = None
 
 
         def get_num_quads(self, image_file=None):

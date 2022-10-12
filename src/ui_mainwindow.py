@@ -155,8 +155,6 @@ class Ui_MainWindow(object):
         self.menubar.setGeometry(QRect(0, 0, 769, 22))
         self.menuFile = QMenu(self.menubar)
         self.menuFile.setObjectName(u"menuFile")
-        self.menuCrop = QMenu(self.menubar)
-        self.menuCrop.setObjectName(u"menuCrop")
         self.menuHelp = QMenu(self.menubar)
         self.menuHelp.setObjectName(u"menuHelp")
         MainWindow.setMenuBar(self.menubar)
@@ -165,11 +163,9 @@ class Ui_MainWindow(object):
         MainWindow.setStatusBar(self.statusbar)
 
         self.menubar.addAction(self.menuFile.menuAction())
-        self.menubar.addAction(self.menuCrop.menuAction())
         self.menubar.addAction(self.menuHelp.menuAction())
         self.menuFile.addAction(self.actionOpen_Folder)
         self.menuFile.addAction(self.actionClose_Folder)
-        self.menuCrop.addAction(self.actionClear_all_quadrilaterals)
         self.menuHelp.addAction(self.actionAbout)
 
         self.retranslateUi(MainWindow)
@@ -194,7 +190,6 @@ class Ui_MainWindow(object):
         self.patchHeightLabel.setText(QCoreApplication.translate("MainWindow", u"Patch Height (px)", None))
         self.autoPatchSizeCheckbox.setText(QCoreApplication.translate("MainWindow", u"Automatic patch size", None))
         self.menuFile.setTitle(QCoreApplication.translate("MainWindow", u"File", None))
-        self.menuCrop.setTitle(QCoreApplication.translate("MainWindow", u"Actions", None))
         self.menuHelp.setTitle(QCoreApplication.translate("MainWindow", u"Help", None))
     # retranslateUi
 

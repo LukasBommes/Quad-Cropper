@@ -177,12 +177,6 @@
     <addaction name="actionOpen_Folder"/>
     <addaction name="actionClose_Folder"/>
    </widget>
-   <widget class="QMenu" name="menuCrop">
-    <property name="title">
-     <string>Actions</string>
-    </property>
-    <addaction name="actionClear_all_quadrilaterals"/>
-   </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
      <string>Help</string>
@@ -190,7 +184,6 @@
     <addaction name="actionAbout"/>
    </widget>
    <addaction name="menuFile"/>
-   <addaction name="menuCrop"/>
    <addaction name="menuHelp"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
