@@ -11,7 +11,7 @@ def main():
 
     from PySide6.QtWidgets import QApplication, QMainWindow, QFileDialog, QMessageBox, \
         QGraphicsView, QGraphicsScene, QGraphicsPixmapItem, QFrame
-    from PySide6.QtCore import Qt, QObject, Slot, Signal, QPoint, QPointF, QRectF
+    from PySide6.QtCore import Qt, QObject, Slot, Signal, QSettings, QPoint, QPointF, QRectF
     from PySide6.QtGui import QPixmap, QImage, QPainter, QBrush, QColor, QPolygonF
     from src.ui_mainwindow import Ui_MainWindow
     from src.utils import sort_cw, crop_module
@@ -101,6 +101,10 @@ def main():
             self.viewer.imageClicked.connect(self.imageClicked)        
             self.ui.gridLayout.addWidget(self.viewer, 0, 1, 1, 1)
 
+            # application presets
+            self.settings = QSettings('Lukas Bommes', 'QuadCropper')
+
+            # signals
             self.model.current_image_changed.connect(lambda _: self.update_image_label(fit_in_view=True))
             self.model.current_quad_changed.connect(lambda _: self.update_image_label(fit_in_view=False))
             self.model.quads_changed.connect(self.save_quads)
@@ -125,6 +129,9 @@ def main():
             # image selection changed
             self.ui.imagesListWidget.currentItemChanged.connect(self.image_selection_changed)
             self.ui.quadsListWidget.currentItemChanged.connect(self.quad_selection_changed)
+
+            # restore settings
+            self.restore_settings()
 
 
         def enable(self):
@@ -155,6 +162,13 @@ def main():
             event.accept()
 
 
+        def closeEvent(self, event):
+            self.settings.setValue('window size', self.size())
+            self.settings.setValue('window position', self.pos())
+            print("Saved presets")
+            event.accept()
+
+
         def about(self):
             gh = "LukasBommes/Quad-Cropper"
             about_text = "QuadCropper<br><br>" \
@@ -166,6 +180,15 @@ def main():
                 "About QuadCropper",
                 about_text
             )
+
+
+        def restore_settings(self):
+            window_size = self.settings.value('window size')
+            if window_size:
+                self.resize(window_size)
+            window_position = self.settings.value('window position')
+            if window_position:          
+                self.move(window_position)
 
 
         @Slot()
@@ -527,8 +550,6 @@ def main():
 
     app = QApplication(sys.argv)
     window = MainWindow()
-    screen = window.screen()
-    window.resize(screen.availableSize() * 0.5)
     window.show()
 
     sys.exit(app.exec())
