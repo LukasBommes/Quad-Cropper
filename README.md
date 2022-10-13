@@ -67,7 +67,9 @@ To delete all annotations of the entire dataset, click "Actions" -> "Clear All Q
 
 ### Crop and Rectify Quadrilaterals
 
-After you annotated all images, click "Actions" -> "Crop All" in the menu bar. A file dialog pops up, in which you create/navigate to an empty folder. After hitting "Open" in the file dialog, all annotated quadrilaterals are cropped. The cropped patches are stored in the selected folder. Names of the patches are the original image name concatenated with a random alphanumerical ID.
+After you annotated all images, click the "Crop All" button on the left. A file dialog pops up, in which you create/navigate to an empty folder. After hitting "Open" in the file dialog, all annotated quadrilaterals are cropped. The cropped patches are stored in the selected folder. Names of the patches are the original image name concatenated with a random alphanumerical ID.
+
+By default, patch sizes are derived from the size of the annotated quadrilateral ("Automatic patch size" checkbox). You can also uncheck the checkbox and provide a custom width and height to which the cropped patches are scaled.
 
 ### Closing the Image Directory
 
