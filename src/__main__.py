@@ -9,12 +9,12 @@ def main():
     import numpy as np
     import cv2
 
-    from PySide6.QtWidgets import QApplication, QMainWindow, QFileDialog, QMessageBox
-    from PySide6.QtCore import Qt, QObject, Slot, Signal, QSettings, QPointF
-    from PySide6.QtGui import QPixmap, QImage, QPainter, QColor, QPolygonF
+    from PySide6.QtWidgets import QApplication, QMainWindow, QFileDialog, QMessageBox, QSizePolicy
+    from PySide6.QtCore import Qt, QObject, Signal, QSettings, QPointF
+    from PySide6.QtGui import QPainter, QColor, QPolygonF
     from src.ui_mainwindow import Ui_MainWindow
-    from src.viewer import ImageViewer
-    from src.utils import sort_cw, crop_module
+    from src.viewer import ImageViewer, PreviewViewer
+    from src.utils import sort_cw, crop_module, image2pixmap
 
 
 
@@ -32,25 +32,39 @@ def main():
             self.viewer.imageClicked.connect(self.imageClicked)        
             self.ui.gridLayout.addWidget(self.viewer, 0, 1, 1, 1)
 
+            # preview viewer
+            self.preview_viewer = PreviewViewer(self)
+            sizePolicy = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Expanding)
+            sizePolicy.setHorizontalStretch(0)
+            sizePolicy.setVerticalStretch(0)
+            sizePolicy.setHeightForWidth(self.preview_viewer.sizePolicy().hasHeightForWidth())
+            self.preview_viewer.setSizePolicy(sizePolicy)
+            self.ui.verticalLayout.addWidget(self.preview_viewer)
+
             # application presets
             self.settings = QSettings('Lukas Bommes', 'QuadCropper')
 
             # signals
             self.model.current_image_changed.connect(lambda _: self.update_image_label(fit_in_view=True))
+            self.model.current_image_changed.connect(self.update_quad_list)
+            self.model.current_image_changed.connect(self.update_preview)
             self.model.current_quad_changed.connect(lambda _: self.update_image_label(fit_in_view=False))
             self.model.quads_changed.connect(self.save_quads)
-            self.model.quads_changed.connect(lambda _: self.update_image_label(fit_in_view=False))        
+            self.model.quads_changed.connect(lambda _: self.update_image_label(fit_in_view=False))    
+            self.model.quads_changed.connect(self.update_quad_list)    
             self.model.image_files_changed.connect(self.update_image_list)
-            self.model.current_image_changed.connect(self.update_quad_list)
-            self.model.quads_changed.connect(self.update_quad_list)
             self.model.selected_quad_changed.connect(self.selected_quad_changed)
             self.model.selected_quad_changed.connect(lambda _: self.update_image_label(fit_in_view=False))
+            self.model.selected_quad_changed.connect(self.update_preview)
             self.ui.autoPatchSizeCheckbox.stateChanged.connect(lambda value: setattr(self.model, 'auto_patch_size', bool(value)))
             self.model.auto_patch_size_changed.connect(lambda value: self.auto_patch_size_changed(value))
             self.model.auto_patch_size_changed.connect(self.ui.autoPatchSizeCheckbox.setChecked)
+            self.model.auto_patch_size_changed.connect(self.update_preview)
             self.model.patch_width_changed.connect(self.ui.patchWidthSpinBox.setValue)
+            self.model.patch_width_changed.connect(self.update_preview)
             self.ui.patchWidthSpinBox.valueChanged.connect(lambda value: setattr(self.model, 'patch_width', value))
             self.model.patch_height_changed.connect(self.ui.patchHeightSpinBox.setValue)
+            self.model.patch_height_changed.connect(self.update_preview)
             self.ui.patchHeightSpinBox.valueChanged.connect(lambda value: setattr(self.model, 'patch_height', value))
 
             # menu actions
@@ -199,6 +213,30 @@ def main():
             print("Cropped annotated quads for all images in opened folder")
 
 
+        def update_preview(self):
+            # update crop preview image when quad selection changes
+            self.preview_viewer.setImage(pixmap=None)
+            if not self.model.current_image:
+                return
+            if self.model.auto_patch_size:
+                crop_width = None
+                crop_aspect = None
+            else:
+                crop_width = self.model.patch_width
+                crop_aspect = self.model.patch_height / self.model.patch_width
+            image = self.model.current_image["image"]
+            image_name = self.model.current_image["filename"]
+            try:                
+                quad = self.model.quads[image_name][self.model.selected_quad]
+            except KeyError:
+                return
+            quad = sort_cw(np.array(quad))
+            quad = quad.reshape(4, 1, 2)
+            image_cropped, _ = crop_module(
+                image, quad, crop_width=crop_width, crop_aspect=crop_aspect, rotate_mode=None)
+            self.preview_viewer.setImage(pixmap=image2pixmap(image_cropped), fit_in_view=True)
+
+
         def get_image_files(self):
             image_files = []
             for file_type in ["jpg", "jpeg", "png"]:
@@ -228,13 +266,9 @@ def main():
             # load selected image
             image_file = os.path.join(self.model.image_dir, selected_image_file)
             image = self.load_image(image_file)
-            height, width, _ = image.shape[:3]
-            image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-            bytesPerLine = 3 * width
-            qt_image = QImage(image_rgb.data, width, height, bytesPerLine, QImage.Format_RGB888)
             self.model.current_image = {
                 "filename": selected_image_file,
-                "pixmap": QPixmap(qt_image),
+                "pixmap": image2pixmap(image),
                 "image": image,
             }
 
@@ -407,8 +441,8 @@ def main():
             self._current_image = None
             self._selected_quad = None
             self._auto_patch_size = True
-            self._patch_width = 0
-            self._patch_height = 0
+            self._patch_width = 100
+            self._patch_height = 100
 
         def reset(self):
             self.image_dir = None
@@ -418,8 +452,8 @@ def main():
             self.current_image = None
             self.selected_quad = None
             self.auto_patch_size = True
-            self.patch_width = 0
-            self.patch_height = 0
+            self.patch_width = 100
+            self.patch_height = 100
 
         @property
         def image_dir(self):

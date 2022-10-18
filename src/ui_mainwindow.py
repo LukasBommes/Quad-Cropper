@@ -16,11 +16,11 @@ from PySide6.QtGui import (QAction, QBrush, QColor, QConicalGradient,
     QIcon, QImage, QKeySequence, QLinearGradient,
     QPainter, QPalette, QPixmap, QRadialGradient,
     QTransform)
-from PySide6.QtWidgets import (QApplication, QCheckBox, QFormLayout, QGridLayout,
-    QGroupBox, QHBoxLayout, QLabel, QListWidget,
-    QListWidgetItem, QMainWindow, QMenu, QMenuBar,
-    QPushButton, QSizePolicy, QSpinBox, QStatusBar,
-    QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (QApplication, QCheckBox, QFormLayout, QGraphicsView,
+    QGridLayout, QGroupBox, QHBoxLayout, QLabel,
+    QListWidget, QListWidgetItem, QMainWindow, QMenu,
+    QMenuBar, QPushButton, QSizePolicy, QSpinBox,
+    QStatusBar, QVBoxLayout, QWidget)
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -108,6 +108,12 @@ class Ui_MainWindow(object):
 
         self.gridLayout_2.addWidget(self.cropAllButton, 2, 0, 1, 1)
 
+        self.autoPatchSizeCheckbox = QCheckBox(self.cropGroupBox)
+        self.autoPatchSizeCheckbox.setObjectName(u"autoPatchSizeCheckbox")
+        self.autoPatchSizeCheckbox.setChecked(True)
+
+        self.gridLayout_2.addWidget(self.autoPatchSizeCheckbox, 0, 0, 1, 1)
+
         self.formLayout_2 = QFormLayout()
         self.formLayout_2.setObjectName(u"formLayout_2")
         self.patchWidthLabel = QLabel(self.cropGroupBox)
@@ -117,8 +123,10 @@ class Ui_MainWindow(object):
 
         self.patchWidthSpinBox = QSpinBox(self.cropGroupBox)
         self.patchWidthSpinBox.setObjectName(u"patchWidthSpinBox")
+        self.patchWidthSpinBox.setMinimum(1)
         self.patchWidthSpinBox.setMaximum(99999999)
         self.patchWidthSpinBox.setSingleStep(10)
+        self.patchWidthSpinBox.setValue(100)
 
         self.formLayout_2.setWidget(1, QFormLayout.FieldRole, self.patchWidthSpinBox)
 
@@ -129,22 +137,30 @@ class Ui_MainWindow(object):
 
         self.patchHeightSpinBox = QSpinBox(self.cropGroupBox)
         self.patchHeightSpinBox.setObjectName(u"patchHeightSpinBox")
+        self.patchHeightSpinBox.setMinimum(1)
         self.patchHeightSpinBox.setMaximum(99999999)
         self.patchHeightSpinBox.setSingleStep(10)
+        self.patchHeightSpinBox.setValue(100)
 
         self.formLayout_2.setWidget(2, QFormLayout.FieldRole, self.patchHeightSpinBox)
 
 
         self.gridLayout_2.addLayout(self.formLayout_2, 1, 0, 1, 1)
 
-        self.autoPatchSizeCheckbox = QCheckBox(self.cropGroupBox)
-        self.autoPatchSizeCheckbox.setObjectName(u"autoPatchSizeCheckbox")
-        self.autoPatchSizeCheckbox.setChecked(True)
-
-        self.gridLayout_2.addWidget(self.autoPatchSizeCheckbox, 0, 0, 1, 1)
-
 
         self.verticalLayout.addWidget(self.cropGroupBox)
+
+        self.previewLabel = QLabel(self.centralwidget)
+        self.previewLabel.setObjectName(u"previewLabel")
+
+        self.verticalLayout.addWidget(self.previewLabel)
+
+        self.previewGraphicsView = QGraphicsView(self.centralwidget)
+        self.previewGraphicsView.setObjectName(u"previewGraphicsView")
+        sizePolicy.setHeightForWidth(self.previewGraphicsView.sizePolicy().hasHeightForWidth())
+        self.previewGraphicsView.setSizePolicy(sizePolicy)
+
+        self.verticalLayout.addWidget(self.previewGraphicsView)
 
 
         self.gridLayout.addLayout(self.verticalLayout, 0, 0, 1, 1)
@@ -186,9 +202,10 @@ class Ui_MainWindow(object):
         self.deleteAllQuadsButton.setText(QCoreApplication.translate("MainWindow", u"Delete All", None))
         self.cropGroupBox.setTitle(QCoreApplication.translate("MainWindow", u"Crop", None))
         self.cropAllButton.setText(QCoreApplication.translate("MainWindow", u"Crop All", None))
+        self.autoPatchSizeCheckbox.setText(QCoreApplication.translate("MainWindow", u"Automatic patch size", None))
         self.patchWidthLabel.setText(QCoreApplication.translate("MainWindow", u"Patch Width (px)", None))
         self.patchHeightLabel.setText(QCoreApplication.translate("MainWindow", u"Patch Height (px)", None))
-        self.autoPatchSizeCheckbox.setText(QCoreApplication.translate("MainWindow", u"Automatic patch size", None))
+        self.previewLabel.setText(QCoreApplication.translate("MainWindow", u"Preview", None))
         self.menuFile.setTitle(QCoreApplication.translate("MainWindow", u"File", None))
         self.menuHelp.setTitle(QCoreApplication.translate("MainWindow", u"Help", None))
     # retranslateUi

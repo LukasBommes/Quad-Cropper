@@ -1,6 +1,17 @@
 import numpy as np
 import cv2
 
+from PySide6.QtGui import QPixmap, QImage
+
+
+def image2pixmap(image):
+    """Convert 3-channel BGR image to QPixmap"""
+    height, width, _ = image.shape[:3]
+    image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    bytesPerLine = 3 * width
+    qt_image = QImage(image_rgb.data, width, height, bytesPerLine, QImage.Format_RGB888)
+    return QPixmap(qt_image)
+
 
 def sort_cw(pts):
     """Sort points clockwise by first splitting
