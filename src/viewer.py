@@ -84,13 +84,13 @@ class PreviewViewer(QGraphicsView):
         self._image = QGraphicsPixmapItem()
         self._scene.addItem(self._image)
         self.setScene(self._scene)
-        #self.setDragMode(QGraphicsView.NoDrag)
-        #self.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
-        #self.setResizeAnchor(QGraphicsView.AnchorUnderMouse)
-        #self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        #self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self.setBackgroundBrush(QBrush(QColor(30, 30, 30)))
-        #self.setFrameShape(QFrame.NoFrame)
+        self.setDragMode(QGraphicsView.NoDrag)
+        self.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
+        self.setResizeAnchor(QGraphicsView.AnchorUnderMouse)
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        #self.setBackgroundBrush(QBrush(QColor(30, 30, 30)))
+        self.setFrameShape(QFrame.NoFrame)
 
     def hasImage(self):
         return not self._empty

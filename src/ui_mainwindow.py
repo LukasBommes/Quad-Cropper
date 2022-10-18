@@ -16,19 +16,19 @@ from PySide6.QtGui import (QAction, QBrush, QColor, QConicalGradient,
     QIcon, QImage, QKeySequence, QLinearGradient,
     QPainter, QPalette, QPixmap, QRadialGradient,
     QTransform)
-from PySide6.QtWidgets import (QApplication, QCheckBox, QFormLayout, QGraphicsView,
-    QGridLayout, QGroupBox, QHBoxLayout, QLabel,
-    QListWidget, QListWidgetItem, QMainWindow, QMenu,
-    QMenuBar, QPushButton, QSizePolicy, QSpinBox,
-    QStatusBar, QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (QApplication, QCheckBox, QFormLayout, QGridLayout,
+    QGroupBox, QHBoxLayout, QLabel, QListWidget,
+    QListWidgetItem, QMainWindow, QMenu, QMenuBar,
+    QPushButton, QSizePolicy, QSpinBox, QStatusBar,
+    QVBoxLayout, QWidget)
 
-from src.viewer import ImageViewer
+from src.viewer import (ImageViewer, PreviewViewer)
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(769, 834)
+        MainWindow.resize(621, 636)
         self.actionOpen_Folder = QAction(MainWindow)
         self.actionOpen_Folder.setObjectName(u"actionOpen_Folder")
         self.actionCrop_All = QAction(MainWindow)
@@ -58,6 +58,8 @@ class Ui_MainWindow(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.imagesListWidget.sizePolicy().hasHeightForWidth())
         self.imagesListWidget.setSizePolicy(sizePolicy)
+        self.imagesListWidget.setMinimumSize(QSize(256, 0))
+        self.imagesListWidget.setMaximumSize(QSize(256, 16777215))
 
         self.verticalLayout.addWidget(self.imagesListWidget)
 
@@ -70,6 +72,8 @@ class Ui_MainWindow(object):
         self.quadsListWidget.setObjectName(u"quadsListWidget")
         sizePolicy.setHeightForWidth(self.quadsListWidget.sizePolicy().hasHeightForWidth())
         self.quadsListWidget.setSizePolicy(sizePolicy)
+        self.quadsListWidget.setMinimumSize(QSize(256, 0))
+        self.quadsListWidget.setMaximumSize(QSize(256, 16777215))
 
         self.verticalLayout.addWidget(self.quadsListWidget)
 
@@ -102,6 +106,8 @@ class Ui_MainWindow(object):
         sizePolicy2.setVerticalStretch(0)
         sizePolicy2.setHeightForWidth(self.cropGroupBox.sizePolicy().hasHeightForWidth())
         self.cropGroupBox.setSizePolicy(sizePolicy2)
+        self.cropGroupBox.setMinimumSize(QSize(256, 0))
+        self.cropGroupBox.setMaximumSize(QSize(256, 16777215))
         self.gridLayout_2 = QGridLayout(self.cropGroupBox)
         self.gridLayout_2.setObjectName(u"gridLayout_2")
         self.gridLayout_2.setContentsMargins(-1, -1, 9, -1)
@@ -152,30 +158,34 @@ class Ui_MainWindow(object):
 
         self.verticalLayout.addWidget(self.cropGroupBox)
 
-        self.previewLabel = QLabel(self.centralwidget)
-        self.previewLabel.setObjectName(u"previewLabel")
 
-        self.verticalLayout.addWidget(self.previewLabel)
+        self.gridLayout.addLayout(self.verticalLayout, 2, 0, 1, 1)
 
-        self.previewGraphicsView = QGraphicsView(self.centralwidget)
+        self.previewGraphicsView = PreviewViewer(self.centralwidget)
         self.previewGraphicsView.setObjectName(u"previewGraphicsView")
         sizePolicy.setHeightForWidth(self.previewGraphicsView.sizePolicy().hasHeightForWidth())
         self.previewGraphicsView.setSizePolicy(sizePolicy)
+        self.previewGraphicsView.setMinimumSize(QSize(256, 128))
+        self.previewGraphicsView.setMaximumSize(QSize(256, 16777215))
 
-        self.verticalLayout.addWidget(self.previewGraphicsView)
+        self.gridLayout.addWidget(self.previewGraphicsView, 4, 0, 1, 1)
 
+        self.previewLabel = QLabel(self.centralwidget)
+        self.previewLabel.setObjectName(u"previewLabel")
+        self.previewLabel.setMinimumSize(QSize(256, 0))
+        self.previewLabel.setMaximumSize(QSize(256, 16777215))
 
-        self.gridLayout.addLayout(self.verticalLayout, 0, 0, 1, 1)
+        self.gridLayout.addWidget(self.previewLabel, 3, 0, 1, 1)
 
         self.graphicsView = ImageViewer(self.centralwidget)
         self.graphicsView.setObjectName(u"graphicsView")
 
-        self.gridLayout.addWidget(self.graphicsView, 0, 1, 1, 1)
+        self.gridLayout.addWidget(self.graphicsView, 0, 1, 5, 1)
 
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(MainWindow)
         self.menubar.setObjectName(u"menubar")
-        self.menubar.setGeometry(QRect(0, 0, 769, 22))
+        self.menubar.setGeometry(QRect(0, 0, 621, 22))
         self.menuFile = QMenu(self.menubar)
         self.menuFile.setObjectName(u"menuFile")
         self.menuHelp = QMenu(self.menubar)

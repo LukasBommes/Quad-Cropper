@@ -31,13 +31,14 @@ def main():
             self.viewer = self.ui.graphicsView
 
             # preview viewer
-            self.preview_viewer = PreviewViewer(self)
-            sizePolicy = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Expanding)
-            sizePolicy.setHorizontalStretch(0)
-            sizePolicy.setVerticalStretch(0)
-            sizePolicy.setHeightForWidth(self.preview_viewer.sizePolicy().hasHeightForWidth())
-            self.preview_viewer.setSizePolicy(sizePolicy)
-            self.ui.verticalLayout.addWidget(self.preview_viewer)
+            #self.preview_viewer = PreviewViewer(self)
+            #sizePolicy = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Expanding)
+            #sizePolicy.setHorizontalStretch(0)
+            #sizePolicy.setVerticalStretch(0)
+            #sizePolicy.setHeightForWidth(self.preview_viewer.sizePolicy().hasHeightForWidth())
+            #self.preview_viewer.setSizePolicy(sizePolicy)
+            #self.ui.verticalLayout.addWidget(self.preview_viewer)
+            self.preview_viewer = self.ui.previewGraphicsView
 
             # application presets
             self.settings = QSettings('Lukas Bommes', 'QuadCropper')
