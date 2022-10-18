@@ -28,9 +28,7 @@ def main():
             self.disable()
 
             # image viewer
-            self.viewer = ImageViewer(self)
-            self.viewer.imageClicked.connect(self.imageClicked)        
-            self.ui.gridLayout.addWidget(self.viewer, 0, 1, 1, 1)
+            self.viewer = self.ui.graphicsView
 
             # preview viewer
             self.preview_viewer = PreviewViewer(self)

@@ -188,6 +188,9 @@
       </item>
      </layout>
     </item>
+    <item row="0" column="1">
+     <widget class="ImageViewer" name="graphicsView"/>
+    </item>
    </layout>
   </widget>
   <widget class="QMenuBar" name="menubar">
@@ -242,6 +245,13 @@
    </property>
   </action>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>ImageViewer</class>
+   <extends>QGraphicsView</extends>
+   <header>src/viewer.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

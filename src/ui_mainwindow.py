@@ -22,6 +22,8 @@ from PySide6.QtWidgets import (QApplication, QCheckBox, QFormLayout, QGraphicsVi
     QMenuBar, QPushButton, QSizePolicy, QSpinBox,
     QStatusBar, QVBoxLayout, QWidget)
 
+from src.viewer import ImageViewer
+
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
@@ -164,6 +166,11 @@ class Ui_MainWindow(object):
 
 
         self.gridLayout.addLayout(self.verticalLayout, 0, 0, 1, 1)
+
+        self.graphicsView = ImageViewer(self.centralwidget)
+        self.graphicsView.setObjectName(u"graphicsView")
+
+        self.gridLayout.addWidget(self.graphicsView, 0, 1, 1, 1)
 
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(MainWindow)
