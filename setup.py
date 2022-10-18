@@ -10,7 +10,7 @@ setup(
     name="quadcropper",
     maintainer="Lukas Bommes",
     url='https://github.com/LukasBommes/Quad-Cropper',
-    version="0.3", 
+    version="0.4", 
     packages=find_packages(),   
     package_dir={name: name},    
     include_package_data=True,

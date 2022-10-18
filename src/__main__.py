@@ -28,6 +28,7 @@ def main():
 
             # image and preview viewer
             self.viewer = self.ui.graphicsView
+            self.viewer.imageClicked.connect(self.imageClicked)
             self.preview_viewer = self.ui.previewGraphicsView
 
             # application presets
