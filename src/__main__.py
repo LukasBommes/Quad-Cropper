@@ -13,7 +13,6 @@ def main():
     from PySide6.QtCore import Qt, QObject, Signal, QSettings, QPointF
     from PySide6.QtGui import QPainter, QColor, QPolygonF
     from src.ui_mainwindow import Ui_MainWindow
-    from src.viewer import ImageViewer, PreviewViewer
     from src.utils import sort_cw, crop_module, image2pixmap
 
 
@@ -27,17 +26,8 @@ def main():
             self.model = Model()
             self.disable()
 
-            # image viewer
+            # image and preview viewer
             self.viewer = self.ui.graphicsView
-
-            # preview viewer
-            #self.preview_viewer = PreviewViewer(self)
-            #sizePolicy = QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Expanding)
-            #sizePolicy.setHorizontalStretch(0)
-            #sizePolicy.setVerticalStretch(0)
-            #sizePolicy.setHeightForWidth(self.preview_viewer.sizePolicy().hasHeightForWidth())
-            #self.preview_viewer.setSizePolicy(sizePolicy)
-            #self.ui.verticalLayout.addWidget(self.preview_viewer)
             self.preview_viewer = self.ui.previewGraphicsView
 
             # application presets
